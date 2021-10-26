@@ -25,6 +25,12 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual('LTemplate<Z>' |lay| 'T(LRightBranch2, LIntermediate2)', (True, [Eq('double', 'Z')]))
         self.assertEqual('LRightBranch1' |lay| 'S(LLeftBranch2, LIntermediate2)', (False, []))
 
+    def test_min_common_subtype(self):
+        self.assertEqual(min_common_subtype('LRightBranch1', 'LLeftBranch1'),
+                         (parsetype('LTemplate<double>'), [Eq('int', 'double')]))
+        self.assertEqual(min_common_subtype('LRightBranch1', 'FakeClass'), (None, []))
+        self.assertEqual(min_common_subtype('LRightBranch1', 'LIntermediate1'), (parsetype('LIntermediate1'), []))
+
 
 if __name__ == '__main__':
     p = parse_file('example8.txt')

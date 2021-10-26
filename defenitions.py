@@ -17,7 +17,6 @@ def set_context(context):
 
 @easy_types()
 def is_subtype(t1, t2):
-
     while t1 is not None:
         if t1 |eq| t2:
             return True
@@ -54,14 +53,24 @@ def equal_types(t1, t2):
 
 
 @easy_types()
-def lay_in(t1, t2):
-    assert isinstance(t1, Type) and t2 |bel| Variable, "Lay can be defined only for Type lay in Variable"
-    r1 = t1 |gsub| t2.upper
-    r2 = t2.lower |gsub| t1
+def lay_in(t, v):
+    assert isinstance(t, Type) and v | bel | Variable, "Lay can be defined only for Type lay in Variable"
+    r1 = t | gsub | v.upper
+    r2 = v.lower | gsub | t
     if r1[0] and r2[0]:
         return True, r1[1] + r2[1]
     else:
         return False, []
+
+
+@easy_types()
+def min_common_subtype(t1, t2):
+    while t1 is not None:
+        r = t2 |gsub| t1
+        if r[0]:
+            return t1, r[1]
+        t1 = parents.get(t1)
+    return None, []
 
 
 sub = Infix(is_subtype)
