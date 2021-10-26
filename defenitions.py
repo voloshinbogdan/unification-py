@@ -53,8 +53,20 @@ def equal_types(t1, t2):
     return False
 
 
+@easy_types()
+def lay_in(t1, t2):
+    assert isinstance(t1, Type) and t2 |bel| Variable, "Lay can be defined only for Type lay in Variable"
+    r1 = t1 |gsub| t2.upper
+    r2 = t2.lower |gsub| t1
+    if r1[0] and r2[0]:
+        return True, r1[1] + r2[1]
+    else:
+        return False, []
+
+
 sub = Infix(is_subtype)
 gsub = Infix(is_generic_subtype)
 bel = Infix(belongs)
 eq = Infix(equal_types)
 eleq = Infix(make_eq_constraints)
+lay = Infix(lay_in)

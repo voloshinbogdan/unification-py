@@ -19,8 +19,13 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual('LRightBranch2' |gsub| 'LTemplate<int>', (True, [Eq('double', 'int')]))
         self.assertEqual('LTemplate<T>' |gsub| 'LTemplate<int>', (True, [Eq('T', 'int')]))
 
+    def test_lay(self):
+        self.assertEqual('LTemplate<Z>' |lay| 'T(LRightBranch2, LIntermediate2)', (True, [Eq('double', 'Z')]))
+        self.assertEqual('LRightBranch1' |lay| 'S(LLeftBranch2, LIntermediate2)', (False, []))
+
 
 if __name__ == '__main__':
     p = parse_file('example8.txt')
     set_context(p)
+    print()
     unittest.main()
