@@ -1,16 +1,5 @@
 import graphviz
-from data.meta_types import *
-from data.constraints import *
-
-
-def parsetype(s):
-    s = str.strip(s)
-    if "<" in s:
-        name, params = s.replace(">", "").split("<")
-        params = list(map(parsetype, params.split(",")))
-        return GenType(name, params)
-    else:
-        return Type(s)
+from data.meta_types import Type, GenType, parsetype, Eq, Sub, Variable
 
 
 class Parser:
@@ -32,10 +21,8 @@ class Parser:
         self.parents[tokens[0]] = tokens[-1]
 
     def read_variables(self, line):
-        var_name, borders_line = list(map(str.strip, line.split('(')))
-        lower, upper = list(map(parsetype, borders_line.split(')')[0].split(',')))
-        
-        self.variables[var_name] = Variable(var_name, lower, upper)
+        var = parsetype(line)
+        self.variables[var.name] = var
     
     def read_constraints(self, line):
         if ':' in line and '=' in line:
