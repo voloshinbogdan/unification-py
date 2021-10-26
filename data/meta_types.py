@@ -60,6 +60,9 @@ class Variable:
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, other):
+        return other is not None and self.name == other.name and self.lower == other.lower and self.upper == other.upper
+
 
 class Constraint:
 
@@ -113,15 +116,15 @@ def op_conv_to_type(*params):
 
 def parsetype(s):
     s = str.strip(s)
-    if "<" in s:
-        name, params = s.replace(">", "").split("<")
-        params = list(map(parsetype, params.split(",")))
-        return GenType(name, params)
-    elif "(" in s:
+    if "(" in s:
         var_name, borders_line = list(map(str.strip, s.split('(')))
         lower, upper = list(map(parsetype, borders_line.split(')')[0].split(',')))
 
         return Variable(var_name, lower, upper)
+    elif "<" in s:
+        name, params = s.replace(">", "").split("<")
+        params = list(map(parsetype, params.split(",")))
+        return GenType(name, params)
     else:
         return Type(s)
 
