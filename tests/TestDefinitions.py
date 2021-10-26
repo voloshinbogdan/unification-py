@@ -31,6 +31,11 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual(min_common_subtype('LRightBranch1', 'FakeClass'), (None, []))
         self.assertEqual(min_common_subtype('LRightBranch1', 'LIntermediate1'), (parsetype('LIntermediate1'), []))
 
+    def test_max_type(self):
+        self.assertEqual(max_type('LBase', 'LLeftBranch1'), Type('LLeftBranch1'))
+        self.assertEqual(max_type('LLeftBranch2', 'LLeftBranch1'), Type('LLeftBranch2'))
+        self.assertEqual(max_type('FakeClass', 'LLeftBranch1'), None)
+
 
 if __name__ == '__main__':
     p = parse_file('example8.txt')

@@ -73,6 +73,16 @@ def min_common_subtype(t1, t2):
     return None, []
 
 
+@easy_types()
+def max_type(t1, t2):
+    if gsub(t1, t2)[0]:
+        return t1
+    elif gsub(t2, t1)[0]:
+        return t2
+    else:
+        return None
+
+
 sub = Infix(is_subtype)
 gsub = Infix(is_generic_subtype)
 bel = Infix(belongs)
