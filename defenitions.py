@@ -83,9 +83,23 @@ def max_type(t1, t2):
         return None
 
 
+@easy_types()
+def variables_cross(v1, v2):
+    assert v1 |bel| Variable and v2 |bel| Variable, "Only two Variables can be crossed"
+    lower, rconstr = min_common_subtype(v1.lower, v2.lower)
+    upper = max_type(v1.upper, v2.upper)
+    r = lower |gsub| upper
+
+    if lower is None or upper is None or not r[0]:
+        return None, []
+    else:
+        return Variable('', lower, upper), rconstr
+
+
 sub = Infix(is_subtype)
 gsub = Infix(is_generic_subtype)
 bel = Infix(belongs)
 eq = Infix(equal_types)
 eleq = Infix(make_eq_constraints)
 lay = Infix(lay_in)
+cros = Infix(variables_cross)

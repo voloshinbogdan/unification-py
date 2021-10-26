@@ -6,6 +6,12 @@ import unittest
 
 class TestDefinitions(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(self):
+        p = parse_file('example8.txt')
+        set_context(p)
+        print('(LIntermediate1, LBase)' | cros | '(LRightBranch2, LIntermediate2)')
+
     def test_sub(self):
         self.assertTrue('LRightBranch2' |sub| 'LTemplate<double>')
 
@@ -36,8 +42,12 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual(max_type('LLeftBranch2', 'LLeftBranch1'), Type('LLeftBranch2'))
         self.assertEqual(max_type('FakeClass', 'LLeftBranch1'), None)
 
+    def test_cros(self):
+        self.assertEqual('(LLeftBranch1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
+                         (parsetype('(LTemplate<int>, LIntermediate2)'), [Eq('double', 'int')]))
+        self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
+                         (None, []))
+
 
 if __name__ == '__main__':
-    p = parse_file('example8.txt')
-    set_context(p)
     unittest.main()
