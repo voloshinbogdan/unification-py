@@ -28,8 +28,8 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual('LBase' |gsub| 'LTemplate<F>', (False, []))
 
     def test_lay(self):
-        self.assertEqual('LTemplate<Z>' |lay| 'T(LRightBranch2, LIntermediate2)', (True, [Eq('double', 'Z')]))
-        self.assertEqual('LRightBranch1' |lay| 'S(LLeftBranch2, LIntermediate2)', (False, []))
+        self.assertEqual('LTemplate<Z>' |lay| '(LRightBranch2, LIntermediate2)', (True, [Eq('double', 'Z')]))
+        self.assertEqual('LRightBranch1' |lay| '(LLeftBranch2, LIntermediate2)', (False, []))
 
     def test_min_common_subtype(self):
         self.assertEqual(min_common_subtype('LRightBranch1', 'LLeftBranch1'),
