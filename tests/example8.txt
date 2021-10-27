@@ -8,7 +8,7 @@ LRightBranch1 : LTemplate<double>
 LRightBranch2 : LRightBranch1
 #Variables
 S(LLeftBranch2, LIntermediate2)
-U(LTemplate<F>, LIntermediate2)
+U(LTemplate<float>, LIntermediate2)
 T(LRightBranch2, LIntermediate2)
 #Constraints
 S: U

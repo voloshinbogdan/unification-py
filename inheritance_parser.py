@@ -18,7 +18,7 @@ class Parser:
 
     def read_inheritance(self, line):
         tokens = list(map(parsetype, map(str.strip, line.split(':'))))
-        self.parents[tokens[0]] = tokens[-1]
+        self.parents[tokens[0].name] = tokens[0], tokens[-1]
 
     def read_variables(self, line):
         var = parsetype(line)
@@ -86,14 +86,14 @@ def build_graph(name, parents):
     e = graphviz.Digraph(name, filename=name + '.dot')
     e.graph_attr['rankdir'] = 'BT'
     
-    keys = list(parents.keys())
+    keys = list(map(lambda x: x[0], parents.values()))
 
     e.attr('node', shape='box')
     
     for k in keys:
         e.node(k.name, label=str(k))
     
-    for f, t in parents.items():
+    for _, (f, t) in parents.items():
         if isinstance(t, GenType):
             params = keys[keys.index(Type(t.name))].params
             e.edge(f.name, t.name, label=",".join(map(lambda x: '{0}={1}'.format(str(x[0]), str(x[1])),zip(params, t.params))))

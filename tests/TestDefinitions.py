@@ -3,14 +3,17 @@ from inheritance_parser import parse_file
 from data.meta_types import Type, GenType, Eq, Sub
 from data.context import set_context
 import unittest
+from parameterized import parameterized
+
+p = parse_file('example8.txt')
+set_context(p)
 
 
 class TestDefinitions(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        p = parse_file('example8.txt')
-        set_context(p)
+        pass
 
     def test_sub(self):
         self.assertTrue('LRightBranch2' |sub| 'LTemplate<double>')
@@ -48,8 +51,7 @@ class TestDefinitions(unittest.TestCase):
                          (parsetype('(LTemplate<int>, LIntermediate2)'), [Eq('double', 'int')]))
         self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
                          (None, []))
-        self.assertEqual('S' |cros| 'T', (parsetype('(LTemplate<double>, LIntermediate2'), [Eq('double', 'int')]))
-
+        self.assertEqual('S' |cros| 'T', (parsetype('(LTemplate<int>, LIntermediate2'), [Eq('double', 'int')]))
 
     def test_vsub(self):
         self.assertEqual('U' |vsub| 'LBase', (True, []))
@@ -59,6 +61,23 @@ class TestDefinitions(unittest.TestCase):
 
     def test_vice(self):
         self.assertEqual(str('T' |vice| 'S'), 'T(LRightBranch2, LIntermediate2) -> S(LLeftBranch2, LIntermediate2)')
+
+    @parameterized.expand([
+        ([Eq('S', 'T'), Sub('S', 'U')], ['bool' |vice| 'float'],
+         [Eq('S(LLeftBranch2, LIntermediate2)', 'T(LRightBranch2, LIntermediate2)'),
+          Sub('S(LLeftBranch2, LIntermediate2)', 'U(LTemplate<bool>, LIntermediate2)')]),
+
+        ([Eq('S', 'T'), Sub('S', 'U')], ['LIntermediate1' | vice | 'LIntermediate2'],
+         [Eq('S(LLeftBranch2, LIntermediate1)', 'T(LRightBranch2, LIntermediate1)'),
+          Sub('S(LLeftBranch2, LIntermediate1)', 'U(LTemplate<float>, LIntermediate1)')]),
+
+        ([Eq('S', 'T'), Sub('S', 'U')], ['bool' | vice | 'S', 'Student' |vice| 'LTemplate<float>'],
+         [Eq('bool', 'T(LRightBranch2, LIntermediate2)'),
+          Sub('bool', 'U(Student, LIntermediate2)')])
+    ])
+    def test_at(self, constraints, substitutions, expected):
+        substitutions |at| constraints
+        self.assertSequenceEqual(constraints, expected)
 
 
 if __name__ == '__main__':

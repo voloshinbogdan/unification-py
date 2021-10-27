@@ -46,6 +46,9 @@ class GenType(Type):
     def __str__(self):
         return self.name + "<" + ",".join(map(str, self.params)) + ">"
 
+    def __eq__(self, other):
+        return self.name == other.name and self.params == other.params
+
 
 class Variable:
 

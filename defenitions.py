@@ -7,7 +7,7 @@ def is_subtype(t1, t2):
     while t1 is not None:
         if t1 |eq| t2:
             return True
-        t1 = ctx.parents.get(t1)
+        t1 = ctx.parents.get(t1.name, (None, None))[1]
     return False
 
 
@@ -24,7 +24,7 @@ def is_generic_subtype(t1, t2):
         while t1 is not None:
             if t1.name == t2.name:
                 return True, t1.params |eleq| t2.params
-            t1 = ctx.parents.get(t1)
+            t1 = ctx.parents.get(t1.name, (None, None))[1]
         return False, []
 
     return False, []
@@ -56,7 +56,7 @@ def min_common_subtype(t1, t2):
         r = t2 |gsub| t1
         if r[0]:
             return t1, r[1]
-        t1 = ctx.parents.get(t1)
+        t1 = ctx.parents.get(t1.name, (None, None))[1]
     return None, []
 
 
@@ -102,6 +102,42 @@ def variable_subtype(v1, v2):
         return v1.upper |gsub| v2.lower
 
 
+def substitute(substitutions, constraints):
+    if isinstance(substitutions, list):
+        dsubs = {}
+        for s in substitutions:
+            dsubs[s.to.name] = s
+        substitutions = dsubs
+
+    if isinstance(constraints, list):
+        res = []
+        for c in constraints:
+            res.append(substitute(substitutions, c))
+        constraints.clear()
+        constraints.extend(res)
+        return None
+    elif isinstance(constraints, Eq):
+        return Eq(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
+    elif isinstance(constraints, Sub):
+        return Sub(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
+    elif isinstance(constraints, GenType):
+        if constraints.name in substitutions:
+            return substitutions[constraints.name].of
+        else:
+            return GenType(constraints.name, [substitute(substitutions, p) for p in constraints.params])
+    elif isinstance(constraints, Type):
+        if constraints.name in substitutions:
+            return substitutions[constraints.name].of
+        else:
+            return constraints
+    elif isinstance(constraints, Variable):
+        if constraints.name in substitutions:
+            return substitutions[constraints.name].of
+        else:
+            return Variable(constraints.name, substitute(substitutions, constraints.lower),
+                            substitute(substitutions, constraints.upper))
+
+
 sub = Infix(is_subtype)
 gsub = Infix(is_generic_subtype)
 bel = Infix(belongs)
@@ -112,3 +148,4 @@ cros = Infix(variables_cross)
 out = Infix(out_helper)
 vsub = Infix(variable_subtype)
 vice = Infix(lambda x, y: Substitution(x, y))
+at = Infix(substitute)
