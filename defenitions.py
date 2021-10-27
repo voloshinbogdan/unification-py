@@ -62,12 +62,10 @@ def min_common_subtype(t1, t2):
 
 @easy_types()
 def max_type(t1, t2):
-    r = []
-
-    if t1 |gsub| t2 |out| r:
-        return t1, r[0]
-    elif t2 |gsub| t1 |out| r:
-        return t2, r[1]
+    if t1 |gsub| t2 |out| "<":
+        return t1, ctx.outs["<"]
+    elif t2 |gsub| t1 |out| ">":
+        return t2, ctx.outs[">"]
     else:
         return None, []
 
@@ -77,17 +75,11 @@ def variables_cross(v1, v2):
     assert v1 |bel| Variable and v2 |bel| Variable, "Only two Variables can be crossed"
     lower, rmin = min_common_subtype(v1.lower, v2.lower)
     upper, rmax = max_type(v1.upper, v2.upper)
-    r = []
 
-    if lower is None or upper is None or not lower |gsub| upper |out| r:
+    if lower is None or upper is None or not lower |gsub| upper |out| "l sub u":
         return None, []
     else:
-        return Variable('', lower, upper), rmin + rmax + r[0]
-
-
-def out_helper(pair, outp):
-    outp.append(pair[1])
-    return pair[0]
+        return Variable('', lower, upper), rmin + rmax + ctx.outs["l sub u"]
 
 
 @easy_types()
@@ -145,7 +137,7 @@ eq = Infix(equal_types)
 eleq = Infix(make_eq_constraints)
 lay = Infix(lay_in)
 cros = Infix(variables_cross)
-out = Infix(out_helper)
+out = Infix(ctx.out_helper)
 vsub = Infix(variable_subtype)
 vice = Infix(lambda x, y: Substitution(x, y))
 at = Infix(substitute)
