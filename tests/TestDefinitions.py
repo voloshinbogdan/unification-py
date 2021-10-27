@@ -57,6 +57,9 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual('LLeftBranch1' |vsub| '(LTemplate<Z>, LBase)', (True, [Eq('int', 'Z')]))
         self.assertEqual('LRightBranch2' |vsub| 'LTemplate<int>', (True, [Eq('double', 'int')]))
 
+    def test_vice(self):
+        self.assertEqual(str('T' |vice| 'S'), 'T(LRightBranch2, LIntermediate2) -> S(LLeftBranch2, LIntermediate2)')
+
 
 if __name__ == '__main__':
     unittest.main()

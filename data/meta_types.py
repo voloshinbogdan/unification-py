@@ -100,6 +100,20 @@ class Eq(Constraint):
         self.operation = '='
 
 
+class Substitution:
+
+    @easy_types(1, 2)
+    def __init__(self, of, to):
+        self.to = to
+        self.of = of
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "{0} -> {1}".format(self.of, self.to)
+
+
 def op_conv_to_type(*params):
     res = []
     for p in params:
