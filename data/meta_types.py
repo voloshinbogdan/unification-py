@@ -89,14 +89,17 @@ class Constraint:
 
 class Sub(Constraint):
 
+    @easy_types(1, 2)
     def __init__(self, left, right):
         Constraint.__init__(self, left, right)
         self.priority = 10
         self.operation = ':'
+        self.view = False
 
 
 class Eq(Constraint):
 
+    @easy_types(1, 2)
     def __init__(self, left, right):
         Constraint.__init__(self, left, right)
         self.priority = 1
@@ -146,6 +149,11 @@ def parsetype(s):
         return GenType(name, params)
     else:
         return Type(s)
+
+
+def viewed(s):
+    s.view = True
+    return s
 
 
 def make_eq_constraints(params1, params2):
