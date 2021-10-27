@@ -1,3 +1,4 @@
+import data.context as ctx
 
 
 def easy_types(*params):
@@ -108,7 +109,11 @@ def op_conv_to_type(*params):
         assert isinstance(p, str) or isinstance(p, Type) or isinstance(p, Variable),\
                "Type should be str or Type or Variable"
         if isinstance(p, str):
-            res.append(parsetype(p))
+            if p in ctx.variables:
+                bt = ctx.variables[p]
+            else:
+                bt = parsetype(p)
+            res.append(bt)
         else:
             res.append(p)
     return res

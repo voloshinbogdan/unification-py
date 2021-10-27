@@ -1,6 +1,7 @@
-from inheritance_parser import *
 from defenitions import *
+from inheritance_parser import parse_file
 from data.meta_types import Type, GenType, Eq, Sub
+from data.context import set_context
 import unittest
 
 
@@ -10,7 +11,6 @@ class TestDefinitions(unittest.TestCase):
     def setUpClass(self):
         p = parse_file('example8.txt')
         set_context(p)
-        print('(LIntermediate1, LBase)' | cros | '(LRightBranch2, LIntermediate2)')
 
     def test_sub(self):
         self.assertTrue('LRightBranch2' |sub| 'LTemplate<double>')
@@ -38,15 +38,24 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual(min_common_subtype('LRightBranch1', 'LIntermediate1'), (parsetype('LIntermediate1'), []))
 
     def test_max_type(self):
-        self.assertEqual(max_type('LBase', 'LLeftBranch1'), Type('LLeftBranch1'))
-        self.assertEqual(max_type('LLeftBranch2', 'LLeftBranch1'), Type('LLeftBranch2'))
-        self.assertEqual(max_type('FakeClass', 'LLeftBranch1'), None)
+        self.assertEqual(max_type('LBase', 'LLeftBranch1'), (Type('LLeftBranch1'), []))
+        self.assertEqual(max_type('LLeftBranch2', 'LLeftBranch1'), (Type('LLeftBranch2'), []))
+        self.assertEqual(max_type('LLeftBranch2', 'LTemplate<F>'), (Type('LLeftBranch2'), [Eq('int', 'F')]))
+        self.assertEqual(max_type('FakeClass', 'LLeftBranch1'), (None, []))
 
     def test_cros(self):
         self.assertEqual('(LLeftBranch1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
                          (parsetype('(LTemplate<int>, LIntermediate2)'), [Eq('double', 'int')]))
         self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
                          (None, []))
+        self.assertEqual('S' |cros| 'T', (parsetype('(LTemplate<double>, LIntermediate2'), [Eq('double', 'int')]))
+
+
+    def test_vsub(self):
+        self.assertEqual('U' |vsub| 'LBase', (True, []))
+        self.assertEqual('U' |vsub| 'S', (False, []))
+        self.assertEqual('LLeftBranch1' |vsub| '(LTemplate<Z>, LBase)', (True, [Eq('int', 'Z')]))
+        self.assertEqual('LRightBranch2' |vsub| 'LTemplate<int>', (True, [Eq('double', 'int')]))
 
 
 if __name__ == '__main__':
