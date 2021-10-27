@@ -72,10 +72,7 @@ class Constraint:
         self.left = left
         self.right = right
         self.priority = -1
-        self.operation = ''
-
-    def __str__(self):
-        return "{0} ? {1}".format(self.left, self.right)
+        self.operation = '?'
 
     def __repr__(self):
         return self.__str__()
