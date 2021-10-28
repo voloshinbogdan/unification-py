@@ -148,29 +148,37 @@ def op_conv_to_type(*params):
         assert isinstance(p, str) or isinstance(p, TypeVal) or isinstance(p, Variable),\
                "Type should be str or Type or Variable"
         if isinstance(p, str):
-            if p in ctx.variables:
-                bt = ctx.variables[p]
-            else:
-                bt = parsetype(p)
-            res.append(bt)
+            res.append(parsetype(p))
         else:
             res.append(p)
     return res
 
 
-def parsetype(s):
+def parsetype(s, variables=None):
+    if variables is None:
+        variables = ctx.variables
     s = str.strip(s)
-    if "(" in s:
+    if s == "BOTTOM":
+        return BOTTOM
+    elif s == "TOP":
+        return TOP
+    elif "()" in s:
+        var_name, _ = list(map(str.strip, s.split('(')))
+        return Variable(var_name, BOTTOM, TOP)
+    elif "(" in s:
         var_name, borders_line = list(map(str.strip, s.split('(')))
-        lower, upper = list(map(parsetype, borders_line.split(')')[0].split(',')))
+        lower, upper = list(map(lambda x: parsetype(x, variables), borders_line.split(')')[0].split(',')))
 
         return Variable(var_name, lower, upper)
     elif "<" in s:
         name, params = s.replace(">", "").split("<")
-        params = list(map(parsetype, params.split(",")))
+        params = list(map(lambda x: parsetype(x, variables), params.split(",")))
         return GenType(name, params)
     else:
-        return Type(s)
+        if s in variables:
+            return variables[s]
+        else:
+            return Type(s)
 
 
 def viewed(s):
@@ -191,3 +199,12 @@ def new_var(lower, upper):
     res = Variable('$Generated{0}'.format(var_num), lower, upper)
     var_num += 1
     return res
+
+
+def reset_var_num():
+    global var_num
+    var_num = 0
+
+
+TOP = TypeVal("$Top")
+BOTTOM = TypeVal("$Bottom")

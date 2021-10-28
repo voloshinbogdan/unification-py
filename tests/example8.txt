@@ -1,3 +1,7 @@
+#Variables
+S(LLeftBranch2, LIntermediate2)
+U(LTemplate<float>, LIntermediate2)
+T(LRightBranch2, LIntermediate2)
 #Inheritance
 LIntermediate1 : LBase
 LIntermediate2 : LIntermediate1
@@ -6,10 +10,6 @@ LLeftBranch1 : LTemplate<int>
 LLeftBranch2 : LLeftBranch1
 LRightBranch1 : LTemplate<double>
 LRightBranch2 : LRightBranch1
-#Variables
-S(LLeftBranch2, LIntermediate2)
-U(LTemplate<float>, LIntermediate2)
-T(LRightBranch2, LIntermediate2)
 #Constraints
 S: U
 T: U

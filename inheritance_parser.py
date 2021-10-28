@@ -17,11 +17,11 @@ class Parser:
         return {"parents": self.parents, "variables": self.variables, "constraints": self.constraints}
 
     def read_inheritance(self, line):
-        tokens = list(map(parsetype, map(str.strip, line.split(':'))))
+        tokens = list(map(lambda x: parsetype(x, self.variables), map(str.strip, line.split(':'))))
         self.parents[tokens[0].name] = tokens[0], tokens[-1]
 
     def read_variables(self, line):
-        var = parsetype(line)
+        var = parsetype(line, self.variables)
         self.variables[var.name] = var
     
     def read_constraints(self, line):
@@ -37,10 +37,7 @@ class Parser:
         boundaries = list(map(str.strip, line.split(splitter)))
         bts = []
         for b in boundaries:
-            if b in self.variables:
-                bt = self.variables[b]
-            else:
-                bt = parsetype(b)
+            bt = parsetype(b, self.variables)
             bts.append(bt)
         left, right = bts
         

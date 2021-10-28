@@ -47,11 +47,13 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual(max_type('FakeClass', 'LLeftBranch1'), (None, []))
 
     def test_cros(self):
+        reset_var_num()
         self.assertEqual('(LLeftBranch1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
-                         (parsetype('(LTemplate<int>, LIntermediate2)'), [Eq('double', 'int')]))
+                         (parsetype('$Generated0(LTemplate<int>, LIntermediate2)'), [Eq('double', 'int')]))
         self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
                          (None, []))
-        self.assertEqual('S' |cros| 'T', (parsetype('(LTemplate<int>, LIntermediate2'), [Eq('double', 'int')]))
+        self.assertEqual('S' |cros| 'T',
+                         (parsetype('$Generated1(LTemplate<int>, LIntermediate2'), [Eq('double', 'int')]))
 
     def test_vsub(self):
         self.assertEqual('U' |vsub| 'LBase', (True, []))
@@ -84,6 +86,14 @@ class TestDefinitions(unittest.TestCase):
         self.assertTrue('S' |infv| 'LTemplate<S>')
         self.assertFalse('T' |infv| 'LTemplate<S>')
 
+
+    def test_bottom_top(self):
+        self.assertTrue('BOTTOM' |sub| 'TOP')
+        self.assertFalse('TOP' |sub| 'BOTTOM')
+        self.assertTrue('BOTTOM' |gsub| 'TOP')
+        self.assertEqual('TOP' |gsub| 'BOTTOM', (False, []))
+        self.assertTrue('BOTTOM' |vsub| 'TOP')
+        self.assertEqual('TOP' |vsub| 'BOTTOM', (False, []))
 
 if __name__ == '__main__':
     unittest.main()
