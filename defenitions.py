@@ -130,6 +130,15 @@ def substitute(substitutions, constraints):
                             substitute(substitutions, constraints.upper))
 
 
+@easy_types()
+def is_in_free_varaiables(v, t):
+    if t.name == v.name:
+        return True
+    if t |bel| GenType:
+        return all([is_in_free_varaiables(v, p) for p in t.params])
+    return False
+
+
 sub = Infix(is_subtype)
 gsub = Infix(is_generic_subtype)
 bel = Infix(belongs)
@@ -141,3 +150,4 @@ out = Infix(ctx.out_helper)
 vsub = Infix(variable_subtype)
 vice = Infix(lambda x, y: Substitution(x, y))
 at = Infix(substitute)
+infv = Infix(is_in_free_varaiables)

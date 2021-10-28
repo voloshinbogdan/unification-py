@@ -80,5 +80,10 @@ class TestDefinitions(unittest.TestCase):
         self.assertSequenceEqual(constraints, expected)
 
 
+    def test_infv(self):
+        self.assertTrue('S' |infv| 'LTemplate<S>')
+        self.assertFalse('T' |infv| 'LTemplate<S>')
+
+
 if __name__ == '__main__':
     unittest.main()
