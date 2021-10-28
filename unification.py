@@ -14,9 +14,9 @@ def unify(constraints):
     if not constraints:
         return [], []
     v = heapq.heappop(constraints)
-    if v |bel| Eq:
+    if isinstance(v, Eq):
         unify_eq(v)
-    elif v |bel| Sub:
+    elif isinstance(v, Sub):
         unify_sub(constraints, v)
 
 
@@ -24,9 +24,9 @@ def unify_eq(constraints, c):
     S, T = c.left, c.right
     if S |bel| Type and T |bel| Type and S == T:
         return unify(constraints)
-    elif S |bel| Variable and isinstance(T, Type) and not S |infv| T and T |lay| S |out| 'lay':
+    elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| 'lay':
         return unify([S |rep| T] |at| (constraints + ctx.outs['lay'])) |adds| [S |rep| T]
-    elif isinstance(S, Type) and T |bel| Variable and not T |infv| S and S |lay| T |out| 'lay':
+    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| 'lay':
         return unify([T |rep| S] |at| (constraints + ctx.outs['lay'])) |adds| [T |rep| S]
     elif S |bel| Variable and T |bel| Variable:
         X = S |cros| T |out| 'cross'
@@ -36,6 +36,8 @@ def unify_eq(constraints, c):
             raise Exception('fail')
     elif S |bel| GenType and T |bel| GenType and S.name == T.name:
         return unify(constraints + make_eq_constraints(S.params, T.params))
+    else:
+        raise Exception('fail')
 
 
 def unify_sub(constraints, c):

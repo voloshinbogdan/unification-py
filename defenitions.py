@@ -13,7 +13,7 @@ def is_subtype(t1, t2):
 
 @easy_types(0)
 def belongs(v1, v2):
-    return type(v1) is v2
+    return isinstance(v1, v2)
 
 
 @easy_types()
@@ -41,7 +41,7 @@ def equal_types(t1, t2):
 
 @easy_types()
 def lay_in(t, v):
-    assert isinstance(t, Type) and v | bel | Variable, "Lay can be defined only for Type lay in Variable"
+    assert t |bel| TypeVal and v |bel| Variable, "Lay can be defined only for Type lay in Variable"
     r1 = t | gsub | v.upper
     r2 = v.lower | gsub | t
     if r1[0] and r2[0]:
@@ -84,13 +84,13 @@ def variables_cross(v1, v2):
 
 @easy_types()
 def variable_subtype(v1, v2):
-    if isinstance(v1, Type) and isinstance(v2, Type):
+    if v1 |bel| TypeVal and v2 |bel| TypeVal:
         return v1 |gsub| v2
-    if isinstance(v1, Type) and isinstance(v2, Variable):
+    if v1 |bel| TypeVal and v2 |bel| Variable:
         return v1 |gsub| v2.lower
-    if isinstance(v1, Variable) and isinstance(v2, Type):
+    if v1 |bel| Variable and v2 |bel| TypeVal:
         return v1.upper |gsub| v2
-    if isinstance(v1, Variable) and isinstance(v2, Variable):
+    if v1 |bel| Variable and v2 |bel| Variable:
         return v1.upper |gsub| v2.lower
 
 
@@ -112,17 +112,17 @@ def substitute(substitutions, constraints):
         return Eq(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
     elif isinstance(constraints, Sub):
         return Sub(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
-    elif isinstance(constraints, GenType):
+    elif constraints |bel| GenType:
         if constraints.name in substitutions:
             return substitutions[constraints.name].to
         else:
             return GenType(constraints.name, [substitute(substitutions, p) for p in constraints.params])
-    elif isinstance(constraints, Type):
+    elif constraints |bel| Type:
         if constraints.name in substitutions:
             return substitutions[constraints.name].to
         else:
             return constraints
-    elif isinstance(constraints, Variable):
+    elif constraints |bel| Variable:
         if constraints.name in substitutions:
             return substitutions[constraints.name].to
         else:

@@ -19,16 +19,28 @@ def easy_types(*params):
     return layer
 
 
-class Type:
-    
+class TypeVal:
+
     def __init__(self, name):
         self.name = name
-    
+
     def __hash__(self):
         return hash(self.name)
 
     def __eq__(self, other):
         return self.name == other.name
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.__str__()
+
+
+class Type(TypeVal):
+    
+    def __init__(self, name):
+        self.name = name
         
     def __str__(self):
         return self.name
@@ -36,8 +48,11 @@ class Type:
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, other):
+        return self.name == other.name
 
-class GenType(Type):
+
+class GenType(TypeVal):
 
     def __init__(self, name, params):
         Type.__init__(self, name)
@@ -123,7 +138,7 @@ class Substitution:
 def op_conv_to_type(*params):
     res = []
     for p in params:
-        assert isinstance(p, str) or isinstance(p, Type) or isinstance(p, Variable),\
+        assert isinstance(p, str) or isinstance(p, TypeVal) or isinstance(p, Variable),\
                "Type should be str or Type or Variable"
         if isinstance(p, str):
             if p in ctx.variables:
