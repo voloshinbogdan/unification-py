@@ -98,7 +98,7 @@ def substitute(substitutions, constraints):
     if isinstance(substitutions, list):
         dsubs = {}
         for s in substitutions:
-            dsubs[s.to.name] = s
+            dsubs[s.of.name] = s
         substitutions = dsubs
 
     if isinstance(constraints, list):
@@ -114,17 +114,17 @@ def substitute(substitutions, constraints):
         return Sub(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
     elif isinstance(constraints, GenType):
         if constraints.name in substitutions:
-            return substitutions[constraints.name].of
+            return substitutions[constraints.name].to
         else:
             return GenType(constraints.name, [substitute(substitutions, p) for p in constraints.params])
     elif isinstance(constraints, Type):
         if constraints.name in substitutions:
-            return substitutions[constraints.name].of
+            return substitutions[constraints.name].to
         else:
             return constraints
     elif isinstance(constraints, Variable):
         if constraints.name in substitutions:
-            return substitutions[constraints.name].of
+            return substitutions[constraints.name].to
         else:
             return Variable(constraints.name, substitute(substitutions, constraints.lower),
                             substitute(substitutions, constraints.upper))
@@ -148,6 +148,6 @@ lay = Infix(lay_in)
 cros = Infix(variables_cross)
 out = Infix(ctx.out_helper)
 vsub = Infix(variable_subtype)
-vice = Infix(lambda x, y: Substitution(x, y))
+rep = Infix(lambda x, y: Substitution(x, y))
 at = Infix(substitute)
 infv = Infix(is_in_free_varaiables)

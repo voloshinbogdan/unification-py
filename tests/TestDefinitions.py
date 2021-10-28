@@ -59,19 +59,19 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual('LLeftBranch1' |vsub| '(LTemplate<Z>, LBase)', (True, [Eq('int', 'Z')]))
         self.assertEqual('LRightBranch2' |vsub| 'LTemplate<int>', (True, [Eq('double', 'int')]))
 
-    def test_vice(self):
-        self.assertEqual(str('T' |vice| 'S'), 'T(LRightBranch2, LIntermediate2) -> S(LLeftBranch2, LIntermediate2)')
+    def test_rep(self):
+        self.assertEqual(str('T' |rep| 'S'), 'T(LRightBranch2, LIntermediate2) -> S(LLeftBranch2, LIntermediate2)')
 
     @parameterized.expand([
-        ([Eq('S', 'T'), Sub('S', 'U')], ['bool' |vice| 'float'],
+        ([Eq('S', 'T'), Sub('S', 'U')], ['float' |rep| 'bool'],
          [Eq('S(LLeftBranch2, LIntermediate2)', 'T(LRightBranch2, LIntermediate2)'),
           Sub('S(LLeftBranch2, LIntermediate2)', 'U(LTemplate<bool>, LIntermediate2)')]),
 
-        ([Eq('S', 'T'), Sub('S', 'U')], ['LIntermediate1' | vice | 'LIntermediate2'],
+        ([Eq('S', 'T'), Sub('S', 'U')], ['LIntermediate2' |rep| 'LIntermediate1'],
          [Eq('S(LLeftBranch2, LIntermediate1)', 'T(LRightBranch2, LIntermediate1)'),
           Sub('S(LLeftBranch2, LIntermediate1)', 'U(LTemplate<float>, LIntermediate1)')]),
 
-        ([Eq('S', 'T'), Sub('S', 'U')], ['bool' | vice | 'S', 'Student' |vice| 'LTemplate<float>'],
+        ([Eq('S', 'T'), Sub('S', 'U')], ['S' |rep| 'bool', 'LTemplate<float>' |rep| 'Student'],
          [Eq('bool', 'T(LRightBranch2, LIntermediate2)'),
           Sub('bool', 'U(Student, LIntermediate2)')])
     ])
