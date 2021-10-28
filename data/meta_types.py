@@ -101,6 +101,9 @@ class Constraint:
     def __eq__(self, other):
         return (self.left, self.right, self.operation) == (other.left, other.right, other.operation)
 
+    def __lt__(self, other):
+        return str(self) < str(other)
+
 
 class Sub(Constraint):
 
@@ -178,3 +181,13 @@ def viewed(s):
 def make_eq_constraints(params1, params2):
     assert(len(params1) == len(params2))
     return [Eq(p1, p2) for p1, p2 in zip(params1, params2)]
+
+
+var_num = 0
+
+
+def new_var(lower, upper):
+    global var_num
+    res = Variable('$Generated{0}'.format(var_num), lower, upper)
+    var_num += 1
+    return res

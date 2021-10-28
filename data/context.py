@@ -2,7 +2,11 @@
 parents = None
 variables = None
 constraints = None
-outs = {}
+_outs = {}
+
+
+def outs(key):
+    return _outs.get(key, [])
 
 
 def set_context(context):
@@ -15,10 +19,10 @@ def set_context(context):
 
 
 def out_helper(pair, outp):
-    outs[outp] = pair[1]
+    _outs[outp] = pair[1]
     return pair[0]
 
 
 def clear_storage():
-    global outs
-    outs = {}
+    global _outs
+    _outs = {}

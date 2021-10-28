@@ -63,9 +63,9 @@ def min_common_subtype(t1, t2):
 @easy_types()
 def max_type(t1, t2):
     if t1 |gsub| t2 |out| "<":
-        return t1, ctx.outs["<"]
+        return t1, ctx.outs("<")
     elif t2 |gsub| t1 |out| ">":
-        return t2, ctx.outs[">"]
+        return t2, ctx.outs(">")
     else:
         return None, []
 
@@ -79,7 +79,7 @@ def variables_cross(v1, v2):
     if lower is None or upper is None or not lower |gsub| upper |out| "l sub u":
         return None, []
     else:
-        return Variable('', lower, upper), rmin + rmax + ctx.outs["l sub u"]
+        return new_var(lower, upper), rmin + rmax + ctx.outs("l sub u")
 
 
 @easy_types()
@@ -104,10 +104,14 @@ def substitute(substitutions, constraints):
     if isinstance(constraints, list):
         res = []
         for c in constraints:
-            res.append(substitute(substitutions, c))
+            if isinstance(c, tuple):
+                sub_res = substitute(substitutions, c[1])
+                res.append((sub_res.priority, sub_res))
+            else:
+                res.append(substitute(substitutions, c))
         constraints.clear()
         constraints.extend(res)
-        return None
+        return constraints
     elif isinstance(constraints, Eq):
         return Eq(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
     elif isinstance(constraints, Sub):
