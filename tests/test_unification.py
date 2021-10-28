@@ -5,7 +5,7 @@ from unification import unify
 
 
 if __name__ == '__main__':
-    p = parse_file('example8.txt')
+    p = parse_file('example1.txt')
     set_context(p)
     try:
         print(unify(ctx.constraints))

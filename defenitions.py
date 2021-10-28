@@ -28,7 +28,7 @@ def belongs(v1, v2):
 @easy_types()
 def is_generic_subtype(t1, t2):
     if check_bottom_top(t1, t2):
-        return True
+        return True, []
     if t1 |sub| t2:
         return True, []
     elif t2 |bel| GenType:
@@ -96,7 +96,7 @@ def variables_cross(v1, v2):
 @easy_types()
 def variable_subtype(v1, v2):
     if check_bottom_top(v1, v2):
-        return True
+        return True, []
     if v1 |bel| TypeVal and v2 |bel| TypeVal:
         return v1 |gsub| v2
     if v1 |bel| TypeVal and v2 |bel| Variable:
@@ -129,6 +129,8 @@ def substitute(substitutions, constraints):
         return Eq(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
     elif isinstance(constraints, Sub):
         return Sub(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
+    elif constraints |bel| TypeVal and (constraints == BOTTOM or constraints == TOP):
+        return constraints
     elif constraints |bel| GenType:
         if constraints.name in substitutions:
             return substitutions[constraints.name].to

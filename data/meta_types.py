@@ -145,6 +145,8 @@ class Substitution:
 def op_conv_to_type(*params):
     res = []
     for p in params:
+        if not (isinstance(p, str) or isinstance(p, TypeVal) or isinstance(p, Variable)):
+            print('oops')
         assert isinstance(p, str) or isinstance(p, TypeVal) or isinstance(p, Variable),\
                "Type should be str or Type or Variable"
         if isinstance(p, str):

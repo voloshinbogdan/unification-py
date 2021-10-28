@@ -28,7 +28,7 @@ def _unify(constraints):
         return [], []
     _, v = heapq.heappop(constraints)
     if isinstance(v, Sub) and v.view:
-        return constraints, []
+        return constraints |con| [v], []
     if isinstance(v, Eq):
         return unify_eq(constraints, v)
     elif isinstance(v, Sub):
@@ -71,8 +71,8 @@ def unify_sub(constraints, c):
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
             S.lower |gsub| T.upper |out| 'SgT':
         Z = new_var(S.lower, T.upper)
-        X = Z |cros| T |out| 'ZT'
-        Y = Z |cros| S |out| 'ZS'
+        X = Z |cros| S |out| 'ZS'
+        Y = Z |cros| T |out| 'ZT'
         if X |vsub| Y |out| 'XvY':
             return _unify([S |rep| X, T |rep| Y] |at| (constraints |con| ctx.outs('SgT') |con| ctx.outs('ZT') |con|
                                                        ctx.outs('ZS') |con| ctx.outs('XvY'))) \
