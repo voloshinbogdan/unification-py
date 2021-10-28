@@ -95,5 +95,6 @@ class TestDefinitions(unittest.TestCase):
         self.assertTrue('BOTTOM' |vsub| 'TOP')
         self.assertEqual('TOP' |vsub| 'BOTTOM', (False, []))
 
+
 if __name__ == '__main__':
     unittest.main()

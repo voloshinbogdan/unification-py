@@ -8,7 +8,11 @@ if __name__ == '__main__':
     p = parse_file('example1.txt')
     set_context(p)
     try:
-        print(unify(ctx.constraints))
+        cons, subs = unify(ctx.constraints)
+        print('***Constraints***:')
+        print('\n'.join(map(str, cons)))
+        print('\n***Substitutions***:')
+        print('\n'.join(map(str, subs)))
     except Exception as e:
         if str(e) == 'fail':
             print('fail')
