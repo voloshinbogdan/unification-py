@@ -107,9 +107,13 @@ class Sub(Constraint):
     @easy_types(1, 2)
     def __init__(self, left, right):
         Constraint.__init__(self, left, right)
-        self.priority = 10
+        self.priority = 2
         self.operation = ':'
         self.view = False
+
+    def viewed(self):
+        self.view = True
+        self.priority = 3
 
 
 class Eq(Constraint):
@@ -167,7 +171,7 @@ def parsetype(s):
 
 
 def viewed(s):
-    s.view = True
+    s.viewed()
     return s
 
 
