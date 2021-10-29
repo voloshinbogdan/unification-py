@@ -5,7 +5,8 @@ import unittest
 
 
 dge.main()
-u.main()
+suite = unittest.TestLoader().loadTestsFromModule(u)
+unittest.TextTestRunner(verbosity=2).run(suite)
 suite = unittest.TestLoader().loadTestsFromModule(d)
 unittest.TextTestRunner(verbosity=2).run(suite)
 

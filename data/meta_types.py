@@ -156,6 +156,13 @@ def op_conv_to_type(*params):
     return res
 
 
+def index(str, sub):
+    if sub in str:
+        return str.index(sub)
+    else:
+        return float('inf')
+
+
 def parsetype(s, variables=None):
     if variables is None:
         variables = ctx.variables
@@ -164,23 +171,30 @@ def parsetype(s, variables=None):
         return BOTTOM
     elif s == "TOP":
         return TOP
-    elif "()" in s:
-        var_name, _ = list(map(str.strip, s.split('(')))
-        return Variable(var_name, BOTTOM, TOP)
-    elif "(" in s:
-        var_name, borders_line = list(map(str.strip, s.split('(')))
-        lower, upper = list(map(lambda x: parsetype(x, variables), borders_line.split(')')[0].split(',')))
-
-        return Variable(var_name, lower, upper)
-    elif "<" in s:
-        name, params = s.replace(">", "").split("<")
-        params = list(map(lambda x: parsetype(x, variables), params.split(",")))
-        return GenType(name, params)
     else:
-        if s in variables:
-            return variables[s]
+        inds = [index(s, '()'), index(s, '('), index(s, '<')]
+        if all(map(lambda x: x == float('inf'), inds)):
+            indicator = -1
         else:
-            return Type(s)
+            indicator = min(list(range(3)), key=inds.__getitem__)
+
+        if indicator == 0:
+            var_name, _ = list(map(str.strip, s.split('(')))
+            return Variable(var_name, BOTTOM, TOP)
+        elif indicator == 1:
+            var_name, borders_line = list(map(str.strip, s.split('(')))
+            lower, upper = list(map(lambda x: parsetype(x, variables), borders_line.split(')')[0].split(',')))
+
+            return Variable(var_name, lower, upper)
+        elif indicator == 2:
+            name, params = s.replace(">", "").split("<")
+            params = list(map(lambda x: parsetype(x, variables), params.split(",")))
+            return GenType(name, params)
+        else:
+            if s in variables:
+                return variables[s]
+            else:
+                return Type(s)
 
 
 def viewed(s):
