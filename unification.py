@@ -82,13 +82,14 @@ def unify_sub(constraints, c):
         Z = new_var(S.lower, T.upper)
         X = Z |cros| S |out| 'ZS'
         Y = Z |cros| T |out| 'ZT'
+
+        def unify_constraints():
+            return _unify([S |rep| X, T |rep| Y] |at| (
+                constraints |con| ctx.outs('SgT') |con| ctx.outs('ZT') |con| ctx.outs('ZS') |con| ctx.outs('XvY')))
+
         if X |vsub| Y |out| 'XvY':
-            return _unify([S |rep| X, T |rep| Y] |at| (constraints |con| ctx.outs('SgT') |con| ctx.outs('ZT') |con|
-                                                       ctx.outs('ZS') |con| ctx.outs('XvY'))) \
-                   |adds| [S |rep| X, T |rep| Y]
+            return unify_constraints() |adds| [S |rep| X, T |rep| Y]
         else:
-            return _unify([S |rep| X, T |rep| Y] |at| (constraints |con| ctx.outs('SgT') |con| ctx.outs('ZT') |con|
-                                                       ctx.outs('ZS') |con| ctx.outs('XvY'))) |con| [viewed(Sub(X, Y))]\
-                   |adds| [S |rep| X, T |rep| Y]
+            return unify_constraints() |con| [viewed(Sub(X, Y))] |adds| [S |rep| X, T |rep| Y]
     else:
         raise Exception('fail')
