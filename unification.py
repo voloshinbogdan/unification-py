@@ -3,6 +3,10 @@ from defenitions import *
 import heapq
 
 
+class Fail(Exception):
+    pass
+
+
 def add_substitutions(res, subs):
     return res[0], res[1] + subs
 
@@ -43,7 +47,7 @@ def _unify(constraints):
     elif isinstance(v, Sub):
         return unify_sub(constraints, v)
     else:
-        raise Exception('fail')
+        raise Fail
 
 
 def unify_eq(constraints, c):
@@ -60,11 +64,11 @@ def unify_eq(constraints, c):
             return _unify([S |rep| X, T |rep| X] |at| (constraints |con| ctx.outs('cross'))) \
                    |adds| [S |rep| X, T |rep| X]
         else:
-            raise Exception('fail')
+            raise Fail
     elif S |bel| GenType and T |bel| GenType and S.name == T.name:
         return _unify(constraints |con| make_eq_constraints(S.params, T.params))
     else:
-        raise Exception('fail')
+        raise Fail
 
 
 def unify_sub(constraints, c):
@@ -92,4 +96,4 @@ def unify_sub(constraints, c):
         else:
             return unify_constraints() |con| [viewed(Sub(X, Y))] |adds| [S |rep| X, T |rep| Y]
     else:
-        raise Exception('fail')
+        raise Fail

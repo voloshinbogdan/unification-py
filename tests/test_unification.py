@@ -1,10 +1,13 @@
 import data.context as ctx
 from inheritance_parser import parse_file
 from data.context import set_context
-from unification import unify
+from unification import unify, Fail
 
 
-if __name__ == '__main__':
+
+
+
+def main():
     p = parse_file('example1.txt')
     set_context(p)
     try:
@@ -13,9 +16,9 @@ if __name__ == '__main__':
         print('\n'.join(map(str, cons)))
         print('\n***Substitutions***:')
         print('\n'.join(map(str, subs)))
-    except Exception as e:
-        if str(e) == 'fail':
-            print('fail')
-        else:
-            raise
+    except Fail:
+        print('fail')
 
+
+if __name__ == '__main__':
+    main()

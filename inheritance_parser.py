@@ -92,7 +92,7 @@ def build_graph(name, parents):
     
     for _, (f, t) in parents.items():
         if isinstance(t, GenType):
-            params = keys[keys.index(Type(t.name))].params
+            params = [k for k in keys if t.name == k.name][0].params
             e.edge(f.name, t.name, label=",".join(map(lambda x: '{0}={1}'.format(str(x[0]), str(x[1])),zip(params, t.params))))
         else:
             e.edge(f.name, t.name)
