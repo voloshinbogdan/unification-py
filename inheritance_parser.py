@@ -96,5 +96,4 @@ def build_graph(name, parents):
             e.edge(f.name, t.name, label=",".join(map(lambda x: '{0}={1}'.format(str(x[0]), str(x[1])),zip(params, t.params))))
         else:
             e.edge(f.name, t.name)
-    print(e.source)
     return e

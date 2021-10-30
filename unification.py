@@ -13,16 +13,10 @@ def add_substitutions(res, subs):
 
 def concatenate_heap(_heap, it):
     f = isinstance(_heap, tuple)
-    if f:
-        heap = _heap[0]
-    else:
-        heap = _heap
+    heap = _heap
     heap.extend([(i.priority, i) for i in it])
     heapq.heapify(heap)
-    if f:
-        return heap, _heap[1]
-    else:
-        return heap
+    return heap
 
 
 adds = Infix(add_substitutions)
@@ -46,8 +40,6 @@ def _unify(constraints):
         return unify_eq(constraints, v)
     elif isinstance(v, Sub):
         return unify_sub(constraints, v)
-    else:
-        raise Fail
 
 
 def unify_eq(constraints, c):
@@ -87,13 +79,30 @@ def unify_sub(constraints, c):
         X = Z |cros| S |out| 'ZS'
         Y = Z |cros| T |out| 'ZT'
 
-        def unify_constraints():
+        def unify_constraints(additional=None):
+            if additional is None:
+                additional = []
             return _unify([S |rep| X, T |rep| Y] |at| (
-                constraints |con| ctx.outs('SgT') |con| ctx.outs('ZT') |con| ctx.outs('ZS') |con| ctx.outs('XvY')))
+                constraints |con| ctx.outs('SgT') |con| ctx.outs('ZT') |con| ctx.outs('ZS') |con| ctx.outs('XvY'))
+                          |con| additional)
 
         if X |vsub| Y |out| 'XvY':
             return unify_constraints() |adds| [S |rep| X, T |rep| Y]
         else:
-            return unify_constraints() |con| [viewed(Sub(X, Y))] |adds| [S |rep| X, T |rep| Y]
+            return unify_constraints([viewed(Sub(X, Y))]) |adds| [S |rep| X, T |rep| Y]
     else:
         raise Fail
+
+
+def simplify_solution_after_unify(solution):
+    intermediate_subs = []
+    base_subs = []
+    constraints, subs = solution
+
+    for s in subs:
+        if s.of.name.startswith('$Generated'):
+            intermediate_subs.append(s)
+        else:
+            base_subs.append(s)
+
+    return intermediate_subs |at| constraints, intermediate_subs |at| base_subs

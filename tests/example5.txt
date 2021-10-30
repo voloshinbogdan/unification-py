@@ -1,0 +1,16 @@
+#Variables
+F()
+G()
+S(LLeftBranch2, LLeftBranch1)
+T(LRightBranch2<int, G>, LBase)
+#Inheritance
+LIntermediate1 : LBase
+LIntermediate2 : LIntermediate1
+LTemplate<(), ()> : LIntermediate2
+LLeftBranch1 : LTemplate<int, double>
+LLeftBranch2 : LLeftBranch1
+LRightBranch1<F, G> : LTemplate<F, G>
+LRightBranch2<F, G> : LRightBranch1<F, G>
+#Constraints
+double = G
+S = T

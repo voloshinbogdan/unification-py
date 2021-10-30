@@ -81,7 +81,9 @@ class Variable:
         return self.__str__()
 
     def __eq__(self, other):
-        return other is not None and self.name == other.name and self.lower == other.lower and self.upper == other.upper
+        return other is not None and isinstance(other, Variable) and\
+               (self.name == other.name or '?' in [self.name, other.name]) and\
+               self.lower == other.lower and self.upper == other.upper
 
 
 class Constraint:
@@ -142,6 +144,9 @@ class Substitution:
     def __str__(self):
         return "{0} -> {1}".format(self.of, self.to)
 
+    def __eq__(self, other):
+        return other is not None and isinstance(other, Substitution) and self.to == other.to and self.of == other.of
+
 
 def op_conv_to_type(*params):
     res = []
@@ -192,6 +197,15 @@ def parsetype(s, variables=None):
         return BOTTOM
     elif s == "TOP":
         return TOP
+    elif '->' in s:
+        of, to = list(map(lambda x: parsetype(x.strip(), variables), s.split('->')))
+        return Substitution(of, to)
+    elif ':' in s:
+        t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), s.split(':')))
+        return Sub(t1, t2)
+    elif '=' in s:
+        t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), s.split('=')))
+        return Eq(t1, t2)
     else:
         inds = [index(s, '()'), index(s, '('), index(s, '<')]
         if all(map(lambda x: x == float('inf'), inds)):

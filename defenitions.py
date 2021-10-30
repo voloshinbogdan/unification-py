@@ -144,6 +144,8 @@ def substitute(substitutions, constraints):
         constraints.clear()
         constraints.extend(res)
         return constraints
+    elif isinstance(constraints, Substitution):
+        return substitute(substitutions, constraints.of) |rep| substitute(substitutions, constraints.to)
     elif isinstance(constraints, Eq):
         return Eq(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
     elif isinstance(constraints, Sub):
@@ -152,17 +154,17 @@ def substitute(substitutions, constraints):
         return constraints
     elif constraints |bel| GenType:
         if constraints.name in substitutions:
-            return substitutions[constraints.name].to
+            return substitute(substitutions, substitutions[constraints.name].to)
         else:
             return GenType(constraints.name, [substitute(substitutions, p) for p in constraints.params])
     elif constraints |bel| Type:
         if constraints.name in substitutions:
-            return substitutions[constraints.name].to
+            return substitute(substitutions, substitutions[constraints.name].to)
         else:
             return constraints
     elif constraints |bel| Variable:
         if constraints.name in substitutions:
-            return substitutions[constraints.name].to
+            return substitute(substitutions, substitutions[constraints.name].to)
         else:
             return Variable(constraints.name, substitute(substitutions, constraints.lower),
                             substitute(substitutions, constraints.upper))
