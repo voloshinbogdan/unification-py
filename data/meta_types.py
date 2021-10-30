@@ -1,4 +1,5 @@
 import data.context as ctx
+import re
 
 
 def easy_types(*params):
@@ -163,6 +164,26 @@ def index(str, sub):
         return float('inf')
 
 
+def split_params(str):
+    splits = []
+    last = 0
+    closed = [0, 0]
+    for m in re.finditer('[,<>()]', str):
+        if m[0] == ',' and closed == [0, 0]:
+            splits.append(str[last: m.start(0)])
+            last = m.end(0)
+        elif m[0] == '<':
+            closed[0] -= 1
+        elif m[0] == '>':
+            closed[0] += 1
+        elif m[0] == '(':
+            closed[1] -= 1
+        elif m[0] == ')':
+            closed[1] += 1
+    splits.append(str[last:])
+    return splits
+
+
 def parsetype(s, variables=None):
     if variables is None:
         variables = ctx.variables
@@ -179,16 +200,17 @@ def parsetype(s, variables=None):
             indicator = min(list(range(3)), key=inds.__getitem__)
 
         if indicator == 0:
-            var_name, _ = list(map(str.strip, s.split('(')))
+            var_name, _, _ = list(map(str.strip, s.partition('(')))
             return Variable(var_name, BOTTOM, TOP)
         elif indicator == 1:
-            var_name, borders_line = list(map(str.strip, s.split('(')))
-            lower, upper = list(map(lambda x: parsetype(x, variables), borders_line.split(')')[0].split(',')))
+            var_name, _, borders_line = list(map(str.strip, s.partition('(')))
+            lower, upper = list(map(lambda x: parsetype(x, variables), split_params(borders_line.rpartition(')')[0])))
 
             return Variable(var_name, lower, upper)
         elif indicator == 2:
-            name, params = s.replace(">", "").split("<")
-            params = list(map(lambda x: parsetype(x, variables), params.split(",")))
+            name, _, params = s.partition('<')
+            params = params.rpartition('>')[0]
+            params = list(map(lambda x: parsetype(x, variables), split_params(params)))
             return GenType(name, params)
         else:
             if s in variables:

@@ -9,6 +9,25 @@ def check_bottom_top(v1, v2):
         return False
 
 
+def replace_parents_params(parentpair, t):
+    if parentpair[0] is None:
+        return None
+    assert parentpair[0].name == t.name
+
+    if parentpair[1] |bel| GenType and t |bel| GenType:
+        subs = []
+        for p1, p2 in zip(parentpair[0].params, t.params):
+            if p1 != p2:
+                subs.append(p1 |rep| p2)
+        return subs |at| parentpair[1]
+    else:
+        return parentpair[1]
+
+
+def get_parent(t):
+    return replace_parents_params(ctx.parents.get(t.name, (None, None)), t)
+
+
 @easy_types()
 def is_subtype(t1, t2):
     if check_bottom_top(t1, t2):
@@ -16,7 +35,7 @@ def is_subtype(t1, t2):
     while t1 is not None:
         if t1 |eq| t2:
             return True
-        t1 = ctx.parents.get(t1.name, (None, None))[1]
+        t1 = get_parent(t1)
     return False
 
 
@@ -35,7 +54,7 @@ def is_generic_subtype(t1, t2):
         while t1 is not None:
             if t1.name == t2.name:
                 return True, t1.params |eleq| t2.params
-            t1 = ctx.parents.get(t1.name, (None, None))[1]
+            t1 = get_parent(t1)
         return False, []
 
     return False, []
@@ -67,7 +86,7 @@ def min_common_subtype(t1, t2):
         r = t2 |gsub| t1
         if r[0]:
             return t1, r[1]
-        t1 = ctx.parents.get(t1.name, (None, None))[1]
+        t1 = get_parent(t1)
     return None, []
 
 

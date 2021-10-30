@@ -74,12 +74,12 @@ def unify_eq(constraints, c):
 def unify_sub(constraints, c):
     S, T = c.left, c.right
     if S |vsub| T |out| 'vsub':
-        _unify(constraints |con| ctx.outs('vsub'))
+        return _unify(constraints |con| ctx.outs('vsub'))
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| 'lay':
-        X = new_var(T, S.upper)
+        X = new_var(S.lower, T)
         return _unify([S |rep| X] |at| (constraints |con| ctx.outs('lay'))) |adds| [S |rep| X]
     elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| 'lay':
-        X = new_var(T.lower, S)
+        X = new_var(S, T.upper)
         return _unify([T |rep| X] |at| (constraints |con| ctx.outs('lay'))) |adds| [T |rep| X]
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
             S.lower |gsub| T.upper |out| 'SgT':

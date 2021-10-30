@@ -53,7 +53,7 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
                          (None, []))
         self.assertEqual('S' |cros| 'T',
-                         (parsetype('$Generated1(LTemplate<int>, LIntermediate2'), [Eq('double', 'int')]))
+                         (parsetype('$Generated1(LTemplate<int>, LIntermediate2)'), [Eq('double', 'int')]))
 
     def test_vsub(self):
         self.assertEqual('U' |vsub| 'LBase', (True, []))

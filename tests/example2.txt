@@ -1,16 +1,17 @@
 #Variables
 F()
-S(LLeftBranch2, LIntermediate2)
-U(LTemplate<float>, LIntermediate2)
-T(LRightBranch2, LIntermediate2)
+S(LLeftBranch2, LBase)
+T(LRightBranch2, LBase)
 #Inheritance
 LIntermediate1 : LBase
 LIntermediate2 : LIntermediate1
 LTemplate<()> : LIntermediate2
 LLeftBranch1 : LTemplate<int>
 LLeftBranch2 : LLeftBranch1
-LRightBranch1 : LTemplate<double>
-LRightBranch2 : LRightBranch1
+LRightBranch1<F> : LTemplate<F>
+LRightBranch2<F> : LRightBranch1<F>
 #Constraints
-S: U
-T: U
+S = T
+LIntermediate2: T
+LTemplate<()>: S
+T: LIntermediate1

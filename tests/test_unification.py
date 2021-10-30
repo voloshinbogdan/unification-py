@@ -8,9 +8,9 @@ from parameterized import parameterized
 
 class UnificationTest(unittest.TestCase):
 
-    @parameterized.expand([('example1.txt',), ('example8.txt',)])
+    @parameterized.expand([('example1.txt',), ('example2.txt',), ('example3.txt',), ('example8.txt',)])
     def test_unify(self, fname):
-        print('\n\n Test unify on ', fname)
+        print('\n\n Test unify on', fname)
         p = parse_file(fname)
         set_context(p)
         try:
@@ -21,6 +21,8 @@ class UnificationTest(unittest.TestCase):
             print('\n'.join(map(str, subs)))
         except Fail:
             print('fail')
+        except Exception:
+            raise
 
 
 def main():
