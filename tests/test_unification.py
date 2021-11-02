@@ -1,5 +1,5 @@
 import data.context as ctx
-from data.meta_types import parsetype
+from data.meta_types import parsetype, variable_matching_on, variable_matching_off
 from inheritance_parser import parse_file
 from data.context import set_context
 from unification import unify, Fail, simplify_solution_after_unify
@@ -26,33 +26,33 @@ class UnificationTest(unittest.TestCase):
 
     @parameterized.expand([
         ('example1.txt', """
-?(LLeftBranch2, LIntermediate2) : ?(LTemplate<int>, LIntermediate2)
+?X(LLeftBranch2, LIntermediate2) : ?Y(LTemplate<int>, LIntermediate2)
 
 Subs:
 F -> int
-S -> ?(LLeftBranch2, LIntermediate2)
-U -> ?(LTemplate<int>, LIntermediate2)
+S -> ?X(LLeftBranch2, LIntermediate2)
+U -> ?Y(LTemplate<int>, LIntermediate2)
 """),
         ('example2.txt', """
 
 Subs:
 F -> int
-S -> ?(LIntermediate2, LIntermediate1)
-T -> ?(LIntermediate2, LIntermediate1)
+S -> ?X(LIntermediate2, LIntermediate1)
+T -> ?X(LIntermediate2, LIntermediate1)
 """),
         ('example3.txt', """
 
 Subs:
 G -> double
-S -> ?(LIntermediate2, LIntermediate1)
-T -> ?(LIntermediate2, LIntermediate1)
+S -> ?X(LIntermediate2, LIntermediate1)
+T -> ?X(LIntermediate2, LIntermediate1)
 """),
         ('example4.txt', """
 
 Subs:
 G -> double
-S -> ?(LLeftBranch2, LLeftBranch1)
-T(LRightBranch2<int, double>, LBase) -> ?(LTemplate<int, double>, LBase)
+S -> ?X(LLeftBranch2, LLeftBranch1)
+T(LRightBranch2<int, double>, LBase) -> ?Y(LTemplate<int, double>, LBase)
 F -> int
 """),
         ('example5.txt', 'fail'),
@@ -66,8 +66,10 @@ F -> int
             cons, subs = simplify_solution_after_unify(unify(ctx.constraints))
             self.assertIsNotNone(expected)
             econs, esubs = expected
+            variable_matching_on()
             self.assertCountEqual(cons, econs)
             self.assertCountEqual(subs, esubs)
+            variable_matching_off()
             if verbose:
                 print('\n\n Test unify on', fname)
                 print('***Constraints***:')

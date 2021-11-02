@@ -71,6 +71,19 @@ class GenType(TypeVal):
         return self.name == other.name and self.params == other.params
 
 
+variable_matches = None
+
+
+def variable_matching_on():
+    global variable_matches
+    variable_matches = {}
+
+
+def variable_matching_off():
+    global variable_matches
+    variable_matches = None
+
+
 class Variable:
 
     @easy_types(2, 3)
@@ -86,9 +99,33 @@ class Variable:
         return self.__str__()
 
     def __eq__(self, other):
-        return other is not None and isinstance(other, Variable) and\
-               (self.name == other.name or '?' in [self.name, other.name]) and\
-               self.lower == other.lower and self.upper == other.upper
+        is_bounds_equal = other is not None and isinstance(other, Variable) and\
+                   self.lower == other.lower and self.upper == other.upper
+        if not is_bounds_equal:
+            return False
+
+        if variable_matches is not None and self.name != '?' and other.name != '?':
+            if self.name.startswith('?') and other.name.startswith('?'):
+                return self.name == other.name
+
+            sname = variable_matches.get(self.name) if self.name.startswith('?') else self.name
+            oname = variable_matches.get(other.name) if other.name.startswith('?') else other.name
+            if sname is None:
+                if oname in variable_matches:
+                    return False
+                sname = oname
+                variable_matches[self.name] = sname
+                variable_matches[sname] = self.name
+            elif oname is None:
+                if sname in variable_matches:
+                    return False
+                oname = sname
+                variable_matches[other.name] = oname
+                variable_matches[oname] = other.name
+
+            return sname == oname
+
+        return self.name == other.name or '?' in [self.name, other.name]
 
 
 class Constraint:
