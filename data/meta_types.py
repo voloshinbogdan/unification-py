@@ -3,6 +3,11 @@ import re
 
 
 def easy_types(*params):
+    """
+    Decorator optional parse arguments on positions params to meta types
+    :param params: positions to convert if is empty convert all arguments
+    :return: decorated function
+    """
     def layer(func):
         def inner(*args):
             if not params:
@@ -41,8 +46,8 @@ class TypeVal:
 class Type(TypeVal):
     
     def __init__(self, name):
-        self.name = name
-        
+        TypeVal.__init__(self, name)
+
     def __str__(self):
         return self.name
     
@@ -56,7 +61,7 @@ class Type(TypeVal):
 class GenType(TypeVal):
 
     def __init__(self, name, params):
-        Type.__init__(self, name)
+        TypeVal.__init__(self, name)
         self.params = params
         
     def __str__(self):
@@ -149,10 +154,13 @@ class Substitution:
 
 
 def op_conv_to_type(*params):
+    """
+    Optional parameters to meta types
+    :param params: list of str or TypeVal or Variable
+    :return: converted arguments
+    """
     res = []
     for p in params:
-        if not (isinstance(p, str) or isinstance(p, TypeVal) or isinstance(p, Variable)):
-            print('oops')
         assert isinstance(p, str) or isinstance(p, TypeVal) or isinstance(p, Variable),\
                "Type should be str or Type or Variable"
         if isinstance(p, str):
@@ -162,20 +170,31 @@ def op_conv_to_type(*params):
     return res
 
 
-def index(str, sub):
-    if sub in str:
-        return str.index(sub)
+def index(s, sub):
+    """
+    Get index of substring sub in string str. If there are no such substring returns inf
+    :param s: string to find substring
+    :param sub: substring to find
+    :return: First index of sub in s
+    """
+    if sub in s:
+        return s.index(sub)
     else:
         return float('inf')
 
 
-def split_params(str):
+def split_params(s):
+    """
+    Split string on parameters split by commas with attention to brackets
+    :param s: string to split
+    :return: list of parameters
+    """
     splits = []
     last = 0
     closed = [0, 0]
-    for m in re.finditer('[,<>()]', str):
+    for m in re.finditer('[,<>()]', s):
         if m[0] == ',' and closed == [0, 0]:
-            splits.append(str[last: m.start(0)])
+            splits.append(s[last: m.start(0)])
             last = m.end(0)
         elif m[0] == '<':
             closed[0] -= 1
@@ -185,11 +204,17 @@ def split_params(str):
             closed[1] -= 1
         elif m[0] == ')':
             closed[1] += 1
-    splits.append(str[last:])
+    splits.append(s[last:])
     return splits
 
 
 def parsetype(s, variables=None):
+    """
+    Parse string on meta types, based on set of variables
+    :param s: string to parse
+    :param variables: dict from type variable name to Variable
+    :return: parsed meta type
+    """
     if variables is None:
         variables = ctx.variables
     s = str.strip(s)
@@ -207,11 +232,11 @@ def parsetype(s, variables=None):
         t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), s.split('=')))
         return Eq(t1, t2)
     else:
-        inds = [index(s, '()'), index(s, '('), index(s, '<')]
-        if all(map(lambda x: x == float('inf'), inds)):
+        indices = [index(s, '()'), index(s, '('), index(s, '<')]
+        if all(map(lambda x: x == float('inf'), indices)):
             indicator = -1
         else:
-            indicator = min(list(range(3)), key=inds.__getitem__)
+            indicator = min(list(range(3)), key=indices.__getitem__)
 
         if indicator == 0:
             var_name, _, _ = list(map(str.strip, s.partition('(')))
@@ -233,7 +258,12 @@ def parsetype(s, variables=None):
                 return Type(s)
 
 
-def viewed(s):
+def viewed(s: Sub) -> Sub:
+    """
+    Make constraint subtype viewed and return this
+    :param s: subtype constraint
+    :return: s made viewed
+    """
     s.viewed()
     return s
 
@@ -247,6 +277,12 @@ var_num = 0
 
 
 def new_var(lower, upper):
+    """
+    Generate new variable with generated name
+    :param lower: lower bound
+    :param upper: upper bound
+    :return: generated variable
+    """
     global var_num
     res = Variable('$Generated{0}'.format(var_num), lower, upper)
     var_num += 1
@@ -254,6 +290,9 @@ def new_var(lower, upper):
 
 
 def reset_var_num():
+    """
+    Resets generated variables counter
+    """
     global var_num
     var_num = 0
 
