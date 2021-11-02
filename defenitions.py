@@ -9,19 +9,19 @@ def check_bottom_top(v1, v2):
         return False
 
 
-def replace_parents_params(parentpair, t):
-    if parentpair[0] is None:
+def replace_parents_params(parent_pair, t):
+    if parent_pair[0] is None:
         return None
-    assert parentpair[0].name == t.name
+    assert parent_pair[0].name == t.name
 
-    if parentpair[1] |bel| GenType and t |bel| GenType:
+    if parent_pair[1] |bel| GenType and t |bel| GenType:
         subs = []
-        for p1, p2 in zip(parentpair[0].params, t.params):
+        for p1, p2 in zip(parent_pair[0].params, t.params):
             if p1 != p2:
                 subs.append(p1 |rep| p2)
-        return subs |at| parentpair[1]
+        return subs | at | parent_pair[1]
     else:
-        return parentpair[1]
+        return parent_pair[1]
 
 
 def get_parent(t):
@@ -171,23 +171,61 @@ def substitute(substitutions, constraints):
 
 
 @easy_types()
-def is_in_free_varaiables(v, t):
+def is_in_free_variables(v, t):
     if t.name == v.name:
         return True
     if t |bel| GenType:
-        return all([is_in_free_varaiables(v, p) for p in t.params])
+        return all([is_in_free_variables(v, p) for p in t.params])
     return False
 
 
 sub = Infix(is_subtype)
+""" Operation t1 |sub| t2 define is t1 direct subtype of t2. Uses @easy_types. """
+
 gsub = Infix(is_generic_subtype)
+"""
+Operation t1 |gsub| t2 define is t1 subtype of t2 with substitution in generic types. Uses @easy_types.
+Returns (bool, [Constraint]). Use with out: t1 |gsub| t2 |out| "t1:t2".
+"""
+
 bel = Infix(belongs)
+""" Operation t |bel| MetaType define is t instance of MetaType. Uses @easy_types. """
+
 eq = Infix(equal_types)
+""" Operation t1 |eq| t2 define is t1 and t2 equal. Uses @easy_types. """
+
 eleq = Infix(make_eq_constraints)
+""" Operation lt1 |eleq| lt2 makes equality constraints element wise from lists lt1, lt2. """
+
 lay = Infix(lay_in)
+"""
+Operation t |lay| v define is type t inside type variable v. Uses @easy_types.
+Returns (bool, [Constraint]). Use with out: t |lay| v |out| "t_in_v".
+"""
+
 cros = Infix(variables_cross)
+"""
+Operation v1 |cros| v2 calculates maximum general type diapason into new general variable. Uses @easy_types.
+Returns (Variable, [Constraint]). Use with out: v1 |cros| v2 |out| "v1_cros_v2".
+"""
+
 out = Infix(ctx.out_helper)
+"""
+Helper operator result |out| key unpacks pair. Key has type string. Return first value, second value writes in context.
+To get second value use context.outs(key).
+"""
+
 vsub = Infix(variable_subtype)
+"""
+Operation v1 |vsub| v2. Extends generic subtype on variables. Uses @easy_types. Returns (bool, [Constraint]).
+Use with out: v1 |vsub| v2 |out| "v1_vsub_v2"
+"""
+
 rep = Infix(lambda x, y: Substitution(x, y))
+""" Operation x |rep| y. Makes substitution x -> y. Replace x by y. Uses @easy_types. """
+
 at = Infix(substitute)
-infv = Infix(is_in_free_varaiables)
+""" Operation subs |at| x. Substitute substitutions subs in x. """
+
+infv = Infix(is_in_free_variables)
+""" Operation v |infv| x define is variable v in variables occurred in x. """
