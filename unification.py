@@ -52,10 +52,13 @@ def unify_eq(constraints, c):
         return _unify([T |rep| S] |at| (constraints |con| ctx.outs('lay'))) |adds| [T |rep| S]
     elif S |bel| Variable and T |bel| Variable:
         X = S |cros| T |out| 'cross'  # May branch on X lower bound
+        subs = []
         if X is not None:
+            for v in [S, T]:
+                if X.lower != v.lower or X.upper != v.lower:
+                    subs.append(v |rep| X)
             X.params.extend(ctx.outs('cross'))
-            return _unify([S |rep| X, T |rep| X] |at| constraints) \
-                   |adds| [S |rep| X, T |rep| X]
+            return _unify(subs |at| constraints) |adds| subs
         else:
             raise Fail
     elif S |bel| GenType and T |bel| GenType and S.name == T.name:
@@ -84,18 +87,21 @@ def unify_sub(constraints, c):
         X.params.extend(ctx.outs('ZS'))
         Y = Z |cros| T |out| 'ZT'  # May branch on Y lower bound
         Y.params.extend(ctx.outs('ZT'))
+        subs = []
+        for vf, vt in [(S, X), (T, Y)]:
+            if vf.lower != vt.lower or vf.upper != vt.upper:
+                subs.append(vf |rep| vt)
 
         def unify_constraints(additional=None):
             if additional is None:
                 additional = []
-            return _unify([S |rep| X, T |rep| Y] |at| (
-                constraints |con| ctx.outs('SgT') |con| ctx.outs('XvY'))
+            return _unify(subs |at| (constraints |con| ctx.outs('SgT') |con| ctx.outs('XvY'))
                           |con| additional)
 
         if X |vsub| Y |out| 'XvY':
-            return unify_constraints() |adds| [S |rep| X, T |rep| Y]
+            return unify_constraints() |adds| subs
         else:
-            return unify_constraints([viewed(Sub(X, Y))]) |adds| [S |rep| X, T |rep| Y]
+            return unify_constraints([viewed(subs |at| Sub(S, T))]) |adds| subs
     else:
         raise Fail
 

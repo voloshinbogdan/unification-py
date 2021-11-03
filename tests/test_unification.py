@@ -26,11 +26,10 @@ class UnificationTest(unittest.TestCase):
 
     @parameterized.expand([
         ('example1.txt', """
-?X(LLeftBranch2, LIntermediate2) : ?Y(LTemplate<int>, LIntermediate2)
+S : ?Y(LTemplate<int>, LIntermediate2)
 
 Subs:
 F -> int
-S -> ?X(LLeftBranch2, LIntermediate2)
 U -> ?Y(LTemplate<int>, LIntermediate2)
 """),
         ('example2.txt', """
@@ -51,12 +50,18 @@ T -> ?X(LIntermediate2, LIntermediate1)
 
 Subs:
 G -> double
-S -> ?X(LLeftBranch2, LLeftBranch1)
 T(LRightBranch2<int, double>, LBase) -> ?Y(LTemplate<int, double>, LBase)
 F -> int
 """),
         ('example5.txt', 'fail'),
         ('example6.txt', 'fail'),
+        ('example7.txt', """
+S: U
+?Y(LRightBranch2<int, G>, LIntermediate1): U
+
+Subs:
+T -> ?Y(LRightBranch2<int, G>, LIntermediate1)
+"""),
         ('example8.txt', 'fail')])
     def test_unify(self, fname, expected):
         p = parse_file(fname)

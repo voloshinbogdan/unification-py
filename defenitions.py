@@ -149,7 +149,10 @@ def substitute(substitutions, constraints):
     elif isinstance(constraints, Eq):
         return Eq(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
     elif isinstance(constraints, Sub):
-        return Sub(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
+        left = substitute(substitutions, constraints.left)
+        right = substitute(substitutions, constraints.right)
+        view = constraints.view and left == constraints.left and right == constraints.right
+        return Sub(left, right, view)
     elif constraints |bel| TypeVal and (constraints == BOTTOM or constraints == TOP):
         return constraints
     elif constraints |bel| GenType:

@@ -145,7 +145,8 @@ class Constraint:
         return "{0} {2} {1}".format(self.left, self.right, self.operation)
 
     def __eq__(self, other):
-        return (self.left, self.right, self.operation) == (other.left, other.right, other.operation)
+        return other is not None and isinstance(other, Constraint) and\
+               (self.left, self.right, self.operation) == (other.left, other.right, other.operation)
 
     def __lt__(self, other):
         return str(self) < str(other)
@@ -154,11 +155,11 @@ class Constraint:
 class Sub(Constraint):
 
     @easy_types(1, 2)
-    def __init__(self, left, right):
+    def __init__(self, left, right, view=False):
         Constraint.__init__(self, left, right)
-        self.priority = 2
+        self.priority = 3 if view else 2
         self.operation = ':'
-        self.view = False
+        self.view = view
 
     def viewed(self):
         self.view = True
