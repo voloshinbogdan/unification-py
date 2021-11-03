@@ -91,9 +91,10 @@ class Variable:
         self.name = name
         self.lower = lower
         self.upper = upper
+        self.params = []
 
     def __str__(self):
-        return "{0}({1}, {2})".format(self.name, str(self.lower), str(self.upper))
+        return "{0}({1}|{3}, {2})".format(self.name, str(self.lower), str(self.upper), str(self.params))
 
     def __repr__(self):
         return self.__str__()
@@ -313,15 +314,17 @@ def make_eq_constraints(params1, params2):
 var_num = 0
 
 
-def new_var(lower, upper):
+def new_var(lower, upper, params=[]):
     """
     Generate new variable with generated name
+    :param params: lower bound params
     :param lower: lower bound
     :param upper: upper bound
     :return: generated variable
     """
     global var_num
     res = Variable('$Generated{0}'.format(var_num), lower, upper)
+    res.params.extend(params)
     var_num += 1
     return res
 

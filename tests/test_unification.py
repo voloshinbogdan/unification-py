@@ -8,7 +8,7 @@ import unittest
 from parameterized import parameterized
 
 
-verbose = False
+verbose = True
 
 
 def parse_result(str):
@@ -64,20 +64,25 @@ F -> int
         expected = parse_result(expected)
         try:
             cons, subs = simplify_solution_after_unify(unify(ctx.constraints))
-            self.assertIsNotNone(expected)
-            econs, esubs = expected
-            variable_matching_on()
-            self.assertCountEqual(cons, econs)
-            self.assertCountEqual(subs, esubs)
-            variable_matching_off()
-            if verbose:
+            if not verbose:
+                self.assertIsNotNone(expected)
+                econs, esubs = expected
+                variable_matching_on()
+                self.assertCountEqual(cons, econs)
+                self.assertCountEqual(subs, esubs)
+                variable_matching_off()
+            else:
                 print('\n\n Test unify on', fname)
                 print('***Constraints***:')
                 print('\n'.join(map(str, cons)))
                 print('\n***Substitutions***:')
                 print('\n'.join(map(str, subs)))
         except Fail:
-            self.assertIsNone(expected)
+            if not verbose:
+                self.assertIsNone(expected)
+            else:
+                print('\n\n Test unify on', fname)
+                print('fail')
         except Exception:
             raise
 

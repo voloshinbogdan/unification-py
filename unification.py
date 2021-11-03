@@ -51,9 +51,10 @@ def unify_eq(constraints, c):
     elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| 'lay':
         return _unify([T |rep| S] |at| (constraints |con| ctx.outs('lay'))) |adds| [T |rep| S]
     elif S |bel| Variable and T |bel| Variable:
-        X = S |cros| T |out| 'cross'
+        X = S |cros| T |out| 'cross'  # May branch on X lower bound
         if X is not None:
-            return _unify([S |rep| X, T |rep| X] |at| (constraints |con| ctx.outs('cross'))) \
+            X.params.extend(ctx.outs('cross'))
+            return _unify([S |rep| X, T |rep| X] |at| constraints) \
                    |adds| [S |rep| X, T |rep| X]
         else:
             raise Fail
@@ -65,7 +66,10 @@ def unify_eq(constraints, c):
 
 def unify_sub(constraints, c):
     S, T = c.left, c.right
-    if S |vsub| T |out| 'vsub':
+    if T |bel| Variable and S |vsub| T |out| 'vsub':
+        # May branch on T lower bound (TypeVal: Variable, Variable: Variable)
+        return _unify(T |rep| new_var(T.lower, T.upper, ctx.outs('vsub')) |at| constraints)
+    elif S | vsub | T | out | 'vsub':
         return _unify(constraints |con| ctx.outs('vsub'))
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| 'lay':
         X = new_var(S.lower, T)
@@ -74,16 +78,18 @@ def unify_sub(constraints, c):
         X = new_var(S, T.upper)
         return _unify([T |rep| X] |at| (constraints |con| ctx.outs('lay'))) |adds| [T |rep| X]
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
-            S.lower |gsub| T.upper |out| 'SgT':
+            S.lower |gsub| T.upper |out| 'SgT':  # Should be any way.
         Z = new_var(S.lower, T.upper)
-        X = Z |cros| S |out| 'ZS'
-        Y = Z |cros| T |out| 'ZT'
+        X = Z |cros| S |out| 'ZS'  # May branch on X lower bound
+        X.params.extend(ctx.outs('ZS'))
+        Y = Z |cros| T |out| 'ZT'  # May branch on Y lower bound
+        Y.params.extend(ctx.outs('ZT'))
 
         def unify_constraints(additional=None):
             if additional is None:
                 additional = []
             return _unify([S |rep| X, T |rep| Y] |at| (
-                constraints |con| ctx.outs('SgT') |con| ctx.outs('ZT') |con| ctx.outs('ZS') |con| ctx.outs('XvY'))
+                constraints |con| ctx.outs('SgT') |con| ctx.outs('XvY'))
                           |con| additional)
 
         if X |vsub| Y |out| 'XvY':

@@ -61,7 +61,7 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual('LRightBranch2' |vsub| 'LTemplate<int>', (True, [Eq('double', 'int')]))
 
     def test_rep(self):
-        self.assertEqual(str('T' |rep| 'S'), 'T(LRightBranch2, LIntermediate2) -> S(LLeftBranch2, LIntermediate2)')
+        self.assertEqual('T' |rep| 'S', parsetype('T(LRightBranch2, LIntermediate2) -> S(LLeftBranch2, LIntermediate2)'))
 
     @parameterized.expand([
         ([Eq('S', 'T'), Sub('S', 'U')], ['float' |rep| 'bool'],
