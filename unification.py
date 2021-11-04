@@ -53,13 +53,9 @@ def unify_eq(constraints, c):
         return _unify([T |rep| S] |at| (constraints |con| r_lay)) |adds| [T |rep| S]
     elif S |bel| Variable and T |bel| Variable:
         X = S |cros| T |out| cross
-        subs = []
         if X is not None:
-            for v in [S, T]:
-                if X.lower != v.lower or X.upper != v.lower:
-                    subs.append(v |rep| X)
-            return _unify(subs |at| (constraints |con| cross)) \
-                   |adds| subs
+            subs = [S | rep | X, T | rep | X]
+            return _unify(subs |at| (constraints |con| cross)) |adds| subs
         else:
             raise Fail
     elif S |bel| GenType and T |bel| GenType and S.name == T.name:
@@ -92,9 +88,7 @@ def unify_sub(constraints, c):
         def unify_constraints(additional=None):
             if additional is None:
                 additional = []
-            return _unify(subs |at| (
-                constraints |con| SgT |con| ZS |con| ZT |con| XvY)
-                          |con| additional)
+            return _unify(subs |at| (constraints |con| SgT |con| ZS |con| ZT |con| XvY) |con| additional)
 
         if X |vsub| Y |out| XvY:
             return unify_constraints() |adds| subs
