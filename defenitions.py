@@ -109,7 +109,7 @@ def variables_cross(v1, v2):
     if lower is None or upper is None or not lower |gsub| upper |out| "l sub u":
         return None, []
     else:
-        return new_var(lower, upper), rmin + rmax + ctx.outs("l sub u")
+        return new_var(lower, upper, rmin), rmax + ctx.outs("l sub u")
 
 
 @easy_types()
@@ -119,11 +119,15 @@ def variable_subtype(v1, v2):
     if v1 |bel| TypeVal and v2 |bel| TypeVal:
         return v1 |gsub| v2
     if v1 |bel| TypeVal and v2 |bel| Variable:
-        return v1 |gsub| v2.lower
+        res, cons = v1 |gsub| v2.lower
+        v2.params.extend(cons)
+        return res, []
     if v1 |bel| Variable and v2 |bel| TypeVal:
         return v1.upper |gsub| v2
     if v1 |bel| Variable and v2 |bel| Variable:
-        return v1.upper |gsub| v2.lower
+        res, cons = v1.upper |gsub| v2.lower
+        v2.params.extend(cons)
+        return res, []
 
 
 def substitute(substitutions, constraints):
@@ -169,8 +173,10 @@ def substitute(substitutions, constraints):
         if constraints.name in substitutions:
             return substitute(substitutions, substitutions[constraints.name].to)
         else:
-            return Variable(constraints.name, substitute(substitutions, constraints.lower),
-                            substitute(substitutions, constraints.upper))
+            return Variable(
+                constraints.name, substitute(substitutions, constraints.lower),
+                            substitute(substitutions, constraints.upper),
+                            substitute(substitutions, constraints.params))
 
 
 @easy_types()

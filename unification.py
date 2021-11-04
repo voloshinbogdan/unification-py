@@ -72,7 +72,7 @@ def unify_sub(constraints, c):
     if T |bel| Variable and S |vsub| T |out| 'vsub':
         # May branch on T lower bound (TypeVal: Variable, Variable: Variable)
         return _unify(T |rep| new_var(T.lower, T.upper, ctx.outs('vsub')) |at| constraints)
-    elif S | vsub | T | out | 'vsub':
+    elif S |vsub| T |out| 'vsub':
         return _unify(constraints |con| ctx.outs('vsub'))
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| 'lay':
         X = new_var(S.lower, T)
@@ -84,9 +84,7 @@ def unify_sub(constraints, c):
             S.lower |gsub| T.upper |out| 'SgT':  # Should be any way.
         Z = new_var(S.lower, T.upper)
         X = Z |cros| S |out| 'ZS'  # May branch on X lower bound
-        X.params.extend(ctx.outs('ZS'))
         Y = Z |cros| T |out| 'ZT'  # May branch on Y lower bound
-        Y.params.extend(ctx.outs('ZT'))
         subs = []
         for vf, vt in [(S, X), (T, Y)]:
             if vf.lower != vt.lower or vf.upper != vt.upper:
@@ -95,7 +93,8 @@ def unify_sub(constraints, c):
         def unify_constraints(additional=None):
             if additional is None:
                 additional = []
-            return _unify(subs |at| (constraints |con| ctx.outs('SgT') |con| ctx.outs('XvY'))
+            return _unify(subs |at| (constraints |con| ctx.outs('SgT') |con| ctx.outs('XvY') |con| ctx.outs('ZS')
+                                     |con| ctx.outs('ZS'))
                           |con| additional)
 
         if X |vsub| Y |out| 'XvY':

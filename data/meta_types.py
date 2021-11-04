@@ -1,5 +1,6 @@
 import data.context as ctx
 import re
+from collections import Counter
 
 
 def easy_types(*params):
@@ -41,6 +42,9 @@ class TypeVal:
 
     def __repr__(self):
         return self.__str__()
+
+    def __le__(self, other):
+        return str(self) < str(other)
 
 
 class Type(TypeVal):
@@ -87,11 +91,14 @@ def variable_matching_off():
 class Variable:
 
     @easy_types(2, 3)
-    def __init__(self, name, lower, upper):
+    def __init__(self, name, lower, upper, params=None):
         self.name = name
         self.lower = lower
         self.upper = upper
-        self.params = []
+        if params is None:
+            self.params = []
+        else:
+            self.params = params
 
     def __str__(self):
         return "{0}({1}|{3}, {2})".format(self.name, str(self.lower), str(self.upper), str(self.params))
@@ -99,9 +106,13 @@ class Variable:
     def __repr__(self):
         return self.__str__()
 
+    def __le__(self, other):
+        return str(self) < str(other)
+
     def __eq__(self, other):
         is_bounds_equal = other is not None and isinstance(other, Variable) and\
-                   self.lower == other.lower and self.upper == other.upper
+                          self.lower == other.lower and self.upper == other.upper and\
+                          Counter(self.params) == Counter(other.params)
         if not is_bounds_equal:
             return False
 
@@ -173,6 +184,15 @@ class Eq(Constraint):
         Constraint.__init__(self, left, right)
         self.priority = 1
         self.operation = '='
+
+    def __eq__(self, other):
+        return other is not None and isinstance(other, Eq) and (
+               (self.left, self.right) == (other.left, other.right) or
+               (self.right, self.left) == (other.left, other.right)
+        )
+
+    def __hash__(self):
+        return hash(str(sorted([str(self.left), str(self.right)])))
 
 
 class Substitution:
