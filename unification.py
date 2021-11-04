@@ -44,20 +44,21 @@ def _unify(constraints):
 
 def unify_eq(constraints, c):
     S, T = c.left, c.right
+    r_lay, cross = [], []
     if S |bel| Type and T |bel| Type and S == T:
         return _unify(constraints)
-    elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| 'lay':
-        return _unify([S |rep| T] |at| (constraints |con| ctx.outs('lay'))) |adds| [S |rep| T]
-    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| 'lay':
-        return _unify([T |rep| S] |at| (constraints |con| ctx.outs('lay'))) |adds| [T |rep| S]
+    elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
+        return _unify([S |rep| T] |at| (constraints |con| r_lay)) |adds| [S |rep| T]
+    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| r_lay:
+        return _unify([T |rep| S] |at| (constraints |con| r_lay)) |adds| [T |rep| S]
     elif S |bel| Variable and T |bel| Variable:
-        X = S |cros| T |out| 'cross'
+        X = S |cros| T |out| cross
         subs = []
         if X is not None:
             for v in [S, T]:
                 if X.lower != v.lower or X.upper != v.lower:
                     subs.append(v |rep| X)
-            return _unify(subs |at| (constraints |con| ctx.outs('cross'))) \
+            return _unify(subs |at| (constraints |con| cross)) \
                    |adds| subs
         else:
             raise Fail
@@ -69,19 +70,20 @@ def unify_eq(constraints, c):
 
 def unify_sub(constraints, c):
     S, T = c.left, c.right
-    if S |vsub| T |out| 'vsub':
-        return _unify(constraints |con| ctx.outs('vsub'))
-    elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| 'lay':
+    r_vsub, r_lay, SgT, ZS, ZT, XvY= [], [], [], [], [], []
+    if S |vsub| T |out| r_vsub:
+        return _unify(constraints |con| r_vsub)
+    elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
         X = new_var(S.lower, T)
-        return _unify([S |rep| X] |at| (constraints |con| ctx.outs('lay'))) |adds| [S |rep| X]
-    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| 'lay':
+        return _unify([S |rep| X] |at| (constraints |con| r_lay)) |adds| [S |rep| X]
+    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| r_lay:
         X = new_var(S, T.upper)
-        return _unify([T |rep| X] |at| (constraints |con| ctx.outs('lay'))) |adds| [T |rep| X]
+        return _unify([T |rep| X] |at| (constraints |con| r_lay)) |adds| [T |rep| X]
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
-            S.lower |gsub| T.upper |out| 'SgT':
+            S.lower |gsub| T.upper |out| SgT:
         Z = new_var(S.lower, T.upper)
-        X = Z |cros| S |out| 'ZS'
-        Y = Z |cros| T |out| 'ZT'
+        X = Z |cros| S |out| ZS
+        Y = Z |cros| T |out| ZT
         subs = []
         for vf, vt in [(S, X), (T, Y)]:
             if vf.lower != vt.lower or vf.upper != vt.upper:
@@ -91,10 +93,10 @@ def unify_sub(constraints, c):
             if additional is None:
                 additional = []
             return _unify(subs |at| (
-                constraints |con| ctx.outs('SgT') |con| ctx.outs('ZT') |con| ctx.outs('ZS') |con| ctx.outs('XvY'))
+                constraints |con| SgT |con| ZS |con| ZT |con| XvY)
                           |con| additional)
 
-        if X |vsub| Y |out| 'XvY':
+        if X |vsub| Y |out| XvY:
             return unify_constraints() |adds| subs
         else:
             return unify_constraints([viewed(subs |at| Sub(S, T))]) |adds| subs
