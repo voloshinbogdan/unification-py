@@ -132,55 +132,6 @@ def variable_subtype(v1, v2):
         return res, []
 
 
-def substitute(substitutions, constraints):
-    if isinstance(substitutions, list):
-        dsubs = {}
-        for s in substitutions:
-            dsubs[s.of.name] = s
-        substitutions = dsubs
-
-    if isinstance(constraints, list):
-        res = []
-        for c in constraints:
-            if isinstance(c, tuple):
-                sub_res = substitute(substitutions, c[1])
-                res.append((sub_res.priority, sub_res))
-            else:
-                res.append(substitute(substitutions, c))
-        constraints.clear()
-        constraints.extend(res)
-        return constraints
-    elif isinstance(constraints, Substitution):
-        return substitute(substitutions, constraints.of) |rep| substitute(substitutions, constraints.to)
-    elif isinstance(constraints, Eq):
-        return Eq(substitute(substitutions, constraints.left), substitute(substitutions, constraints.right))
-    elif isinstance(constraints, Sub):
-        left = substitute(substitutions, constraints.left)
-        right = substitute(substitutions, constraints.right)
-        view = constraints.view and left == constraints.left and right == constraints.right
-        return Sub(left, right, view)
-    elif constraints |bel| TypeVal and (constraints == BOTTOM or constraints == TOP):
-        return constraints
-    elif constraints |bel| GenType:
-        if constraints.name in substitutions:
-            return substitute(substitutions, substitutions[constraints.name].to)
-        else:
-            return GenType(constraints.name, [substitute(substitutions, p) for p in constraints.params])
-    elif constraints |bel| Type:
-        if constraints.name in substitutions:
-            return substitute(substitutions, substitutions[constraints.name].to)
-        else:
-            return constraints
-    elif constraints |bel| Variable:
-        if constraints.name in substitutions:
-            return substitute(substitutions, substitutions[constraints.name].to)
-        else:
-            return Variable(
-                constraints.name, substitute(substitutions, constraints.lower),
-                            substitute(substitutions, constraints.upper),
-                            substitute(substitutions, constraints.params))
-
-
 @easy_types()
 def is_in_free_variables(v, t):
     if t.name == v.name:

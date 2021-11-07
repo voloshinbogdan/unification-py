@@ -52,6 +52,12 @@ class Type(TypeVal):
     def __init__(self, name):
         TypeVal.__init__(self, name)
 
+    def substitute(self, substitutions):
+        if self.name in substitutions:
+            return substitute(substitutions, substitutions[self.name].to)
+        else:
+            return self
+
     def __str__(self):
         return self.name
     
@@ -67,6 +73,12 @@ class GenType(TypeVal):
     def __init__(self, name, params):
         TypeVal.__init__(self, name)
         self.params = params
+
+    def substitute(self, substitutions):
+        if self.name in substitutions:
+            return substitute(substitutions, substitutions[self.name].to)
+        else:
+            return GenType(self.name, [substitute(substitutions, p) for p in self.params])
         
     def __str__(self):
         return self.name + "<" + ",".join(map(str, self.params)) + ">"
@@ -99,6 +111,15 @@ class Variable:
             self.params = []
         else:
             self.params = params
+
+    def substitute(self, substitutions):
+        if self.name in substitutions:
+            return substitute(substitutions, substitutions[self.name].to)
+        else:
+            return Variable(
+                self.name, substitute(substitutions, self.lower),
+                substitute(substitutions, self.upper),
+                substitute(substitutions, self.params))
 
     def __str__(self):
         return "{0}({1}|{3}, {2})".format(self.name, str(self.lower), str(self.upper), str(self.params))
@@ -172,6 +193,12 @@ class Sub(Constraint):
         self.operation = ':'
         self.view = view
 
+    def substitute(self, substitutions):
+        left = substitute(substitutions, self.left)
+        right = substitute(substitutions, self.right)
+        view = self.view and left == self.left and right == self.right
+        return Sub(left, right, view)
+
     def viewed(self):
         self.view = True
         self.priority = 3
@@ -184,6 +211,9 @@ class Eq(Constraint):
         Constraint.__init__(self, left, right)
         self.priority = 1
         self.operation = '='
+
+    def substitute(self, substitutions):
+        return Eq(substitute(substitutions, self.left), substitute(substitutions, self.right))
 
     def __eq__(self, other):
         return other is not None and isinstance(other, Eq) and (
@@ -201,6 +231,9 @@ class Substitution:
     def __init__(self, of, to):
         self.to = to
         self.of = of
+
+    def substitute(self, substitutions):
+        return Substitution(substitute(substitutions, self.of), substitute(substitutions, self.to))
 
     def __repr__(self):
         return self.__str__()
@@ -360,3 +393,27 @@ def reset_var_num():
 
 TOP = TypeVal("$Top")
 BOTTOM = TypeVal("$Bottom")
+
+
+def substitute(substitutions, constraints):
+    if isinstance(substitutions, list):
+        dsubs = {}
+        for s in substitutions:
+            dsubs[s.of.name] = s
+        substitutions = dsubs
+
+    if isinstance(constraints, list):
+        res = []
+        for c in constraints:
+            if isinstance(c, tuple):
+                sub_res = substitute(substitutions, c[1])
+                res.append((sub_res.priority, sub_res))
+            else:
+                res.append(substitute(substitutions, c))
+        constraints.clear()
+        constraints.extend(res)
+        return constraints
+    elif isinstance(constraints, TypeVal) and (constraints == BOTTOM or constraints == TOP):
+        return constraints
+    else:
+        return constraints.substitute(substitutions)
