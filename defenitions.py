@@ -19,7 +19,7 @@ def replace_parents_params(parent_pair, t):
         for p1, p2 in zip(parent_pair[0].params, t.params):
             if p1 != p2:
                 subs.append(p1 |rep| p2)
-        return subs | at | parent_pair[1]
+        return subs |at| parent_pair[1]
     else:
         return parent_pair[1]
 

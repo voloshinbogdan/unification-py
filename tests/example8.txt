@@ -1,7 +1,7 @@
 #Variables
 F()
-S(LLeftBranch2, LIntermediate2)
-U(LTemplate<float>, LIntermediate2)
+S(LLeftBranch2, LIntermediate1)
+U(LTemplate<float>, LBase)
 T(LRightBranch2, LIntermediate2)
 #Inheritance
 LIntermediate1 : LBase

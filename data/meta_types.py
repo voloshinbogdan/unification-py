@@ -413,6 +413,8 @@ def substitute(substitutions, constraints):
         constraints.clear()
         constraints.extend(res)
         return constraints
+    elif isinstance(constraints, tuple):
+        return constraints
     elif isinstance(constraints, TypeVal) and (constraints == BOTTOM or constraints == TOP):
         return constraints
     else:
