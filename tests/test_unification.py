@@ -62,7 +62,8 @@ S: U
 Subs:
 T -> ?Y(LRightBranch2<int, G>, LIntermediate1)
 """),
-        ('example8.txt', 'fail')])
+        ('example8.txt', 'fail'),
+        ('example9.txt', 'fail')])
     def test_unify(self, fname, expected):
         p = parse_file(fname)
         set_context(p)
