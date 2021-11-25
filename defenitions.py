@@ -122,13 +122,13 @@ def variable_subtype(v1, v2):
         return v1 |gsub| v2
     if v1 |bel| TypeVal and v2 |bel| Variable:
         res, cons = v1 |gsub| v2.lower
-        v2.params.extend(cons)
+        pack_constraints(v2, cons)
         return res, []
     if v1 |bel| Variable and v2 |bel| TypeVal:
         return v1.upper |gsub| v2
     if v1 |bel| Variable and v2 |bel| Variable:
         res, cons = v1.upper |gsub| v2.lower
-        v2.params.extend(cons)
+        pack_constraints(v2, cons)
         return res, []
 
 

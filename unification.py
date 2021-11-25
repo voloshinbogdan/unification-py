@@ -20,37 +20,6 @@ def variable_cons(variable):
         return []
 
 
-# May be useful, but I'm not sure
-class ConstrainedType:
-
-    @easy_types(1, 2)
-    def __init__(self, variable, any_type, constraints):
-        self.type = any_type
-        self.variable = variable
-        self.constraints = constraints
-        self.name = self
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return "{0}| {1}".format(self.type, self.constraints)
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-
-        subs = [variable_cons(self.variable)]
-        if isinstance(other, ConstrainedType):
-            subs.append(variable_cons(other.variable))
-
-        return subs |at| self.type == subs |at| other.type
-
-    def substitute(self, substitutions):
-        return ConstrainedType(
-            substitutions |at| self.variable, substitutions |at| self.type, substitutions |at| self.constraints)
-
-
 def add_substitutions(res, subs):
     return res[0], res[1] + subs
 
@@ -119,17 +88,11 @@ def test_lower_bound(X):
     while True:
         if not X.lower |bel| GenType:
             return X
-        Xu = unify_fail(X.params)
+        Xu = unify_fail(unpack_constraints(X))
         if Xu != 'fail':
             break
-        X.lower.params = [(p1, p2) for p1, p2 in zip(X.lower.params, X.params)]
+
         X.lower = get_parent(X.lower)
-        if X.lower |bel| GenType:
-            params = X.lower.params
-            X.params = [p[1] for p in params]
-            X.lower.params = [p[0] for p in params]
-        else:
-            X.params = []
 
 
 def unify_sub(constraints, c):
@@ -151,8 +114,6 @@ def unify_sub(constraints, c):
         test_lower_bound(X)
         Y = Z |cros| T |out| ZT  # May branch on Y lower bound
         test_lower_bound(Y)
-        X.params.extend(S.params)
-        Y.params.extend(T.params)
         subs = []
         for vf, vt in [(S, X), (T, Y)]:
             if vf.lower != vt.lower or vf.upper != vt.upper:

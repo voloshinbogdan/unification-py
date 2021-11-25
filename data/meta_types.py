@@ -87,6 +87,53 @@ class GenType(TypeVal):
         return self.name == other.name and self.params == other.params
 
 
+class ConstrainedType(Type):
+
+    @easy_types(1)
+    def __init__(self, any_type, constraints):
+        if isinstance(constraints, list):
+            self.constraints = constraints
+        else:
+            self.constraints = [constraints]
+
+        for c in self.constraints:
+            if isinstance(c.left, ConstrainedType):
+                self.constraints.extend(c.left.constraints)
+                c.left = c.left.type
+            if isinstance(c.right, ConstrainedType):
+                self.constraints.extend(c.right.constraints)
+                c.right = c.right.type
+
+        if isinstance(any_type, ConstrainedType):
+            self.type = any_type.type
+            self.name = any_type.name
+            self.constraints.extend(any_type.constraints)
+        else:
+            self.name = any_type.name
+            self.type = any_type
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "{0}| {1}".format(self.type, self.constraints)
+
+    """
+    def substitute(self, substitutions):
+        return ConstrainedType(substitutions |at| self.type, substitutions |at| self.constraints)
+
+    def __eq__(self, other):
+        if other is None:
+            return False
+
+        subs = [variable_cons(self.variable)]
+        if isinstance(other, ConstrainedType):
+            subs.append(variable_cons(other.variable))
+
+        return subs |at| self.type == subs |at| other.type
+    """
+
+
 variable_matches = None
 
 
@@ -103,14 +150,10 @@ def variable_matching_off():
 class Variable:
 
     @easy_types(2, 3)
-    def __init__(self, name, lower, upper, params=None):
+    def __init__(self, name, lower, upper):
         self.name = name
         self.lower = lower
         self.upper = upper
-        if params is None:
-            self.params = []
-        else:
-            self.params = params
 
     def substitute(self, substitutions):
         if self.name in substitutions:
@@ -118,11 +161,10 @@ class Variable:
         else:
             return Variable(
                 self.name, substitute(substitutions, self.lower),
-                substitute(substitutions, self.upper),
-                substitute(substitutions, self.params))
+                substitute(substitutions, self.upper))
 
     def __str__(self):
-        return "{0}({1}|{3}, {2})".format(self.name, str(self.lower), str(self.upper), str(self.params))
+        return "{0}({1}, {2})".format(self.name, str(self.lower), str(self.upper))
 
     def __repr__(self):
         return self.__str__()
@@ -132,8 +174,7 @@ class Variable:
 
     def __eq__(self, other):
         is_bounds_equal = other is not None and isinstance(other, Variable) and\
-                          self.lower == other.lower and self.upper == other.upper and\
-                          Counter(self.params) == Counter(other.params)
+                          self.lower == other.lower and self.upper == other.upper
         if not is_bounds_equal:
             return False
 
@@ -253,8 +294,8 @@ def op_conv_to_type(*params):
     """
     res = []
     for p in params:
-        assert isinstance(p, str) or isinstance(p, TypeVal) or isinstance(p, Variable),\
-               "Type should be str or Type or Variable"
+        # assert isinstance(p, str) or isinstance(p, TypeVal) or isinstance(p, Variable) or isinstance(p, tuple),\
+        #       "Type should be str or Type or Variable"
         if isinstance(p, str):
             res.append(parsetype(p))
         else:
@@ -368,17 +409,19 @@ def make_eq_constraints(params1, params2):
 var_num = 0
 
 
-def new_var(lower, upper, params=[]):
+def new_var(lower, upper, constraints=None):
     """
     Generate new variable with generated name
-    :param params: lower bound params
     :param lower: lower bound
     :param upper: upper bound
+    :param constraints: constraints
     :return: generated variable
     """
     global var_num
+    if constraints is None:
+        constraints = []
     res = Variable('$Generated{0}'.format(var_num), lower, upper)
-    res.params.extend(params)
+    pack_constraints(res, constraints)
     var_num += 1
     return res
 
@@ -402,20 +445,37 @@ def substitute(substitutions, constraints):
             dsubs[s.of.name] = s
         substitutions = dsubs
 
-    if isinstance(constraints, list):
+    if isinstance(constraints, list) or isinstance(constraints, tuple):
         res = []
         for c in constraints:
-            if isinstance(c, tuple):
+            if isinstance(c, tuple) and isinstance(c[0], int):
                 sub_res = substitute(substitutions, c[1])
                 res.append((sub_res.priority, sub_res))
             else:
                 res.append(substitute(substitutions, c))
-        constraints.clear()
-        constraints.extend(res)
-        return constraints
-    elif isinstance(constraints, tuple):
-        return constraints
+        if isinstance(constraints, list):
+            constraints.clear()
+            constraints.extend(res)
+            return constraints
+        else:
+            return tuple(res)
     elif isinstance(constraints, TypeVal) and (constraints == BOTTOM or constraints == TOP):
         return constraints
     else:
         return constraints.substitute(substitutions)
+
+
+def pack_constraints(X, constraints):
+    if isinstance(X.lower, GenType) and constraints:
+        X.lower.params = [ConstrainedType(p, c) for p, c in zip(X.lower.params, constraints)]
+
+
+def unpack_constraints(X):
+    if isinstance(X.lower, GenType):
+        res = []
+        for p in X.lower.params:
+            if isinstance(p, ConstrainedType):
+                res.extend(p.constraints)
+        return res
+    else:
+        return []
