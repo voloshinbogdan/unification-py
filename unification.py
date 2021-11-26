@@ -116,7 +116,8 @@ def unify_sub(constraints, c):
         test_lower_bound(Y)
         subs = []
         for vf, vt in [(S, X), (T, Y)]:
-            if vf.lower != vt.lower or vf.upper != vt.upper:
+            tmp_subs = unify_fail(unpack_constraints(vf))
+            if tmp_subs == 'fail' or tmp_subs[1] |at| vf.lower != tmp_subs[1] |at| vt.lower or vf.upper != vt.upper:
                 subs.append(vf |rep| vt)
 
         return _unify(subs |at| (constraints |con| SgT |con| ZS |con| ZT) |con| [subs |at| viewed(Sub(S, T))])\
