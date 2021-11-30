@@ -100,7 +100,11 @@ def unify_sub(constraints, c):
     r_vsub, r_lay, SgT, ZS, ZT = [], [], [], [], []
     if S |vsub| T |out| r_vsub:
         # May branch on T lower bound (TypeVal: Variable, Variable: Variable)
-        return _unify(constraints |con| r_vsub)
+        if T |bel| Variable:
+            Tnew = new_var(T.lower, T.upper, r_vsub)
+            return _unify([T |rep| Tnew] |at| constraints)
+        else:
+            return _unify(constraints |con| r_vsub)
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
         X = new_var(S.lower, T)
         return _unify([S |rep| X] |at| (constraints |con| r_lay)) |adds| [S |rep| X]
