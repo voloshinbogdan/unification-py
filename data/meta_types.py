@@ -117,7 +117,7 @@ class ConstrainedType(Type):
         return self.__str__()
 
     def __str__(self):
-        return "{0}| {1}".format(self.type, self.constraints)
+        return "{0}{1}".format(self.type, self.constraints)
 
     """
     def substitute(self, substitutions):
