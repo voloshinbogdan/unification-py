@@ -325,9 +325,9 @@ def split_params(s):
     """
     splits = []
     last = 0
-    closed = [0, 0]
-    for m in re.finditer('[,<>()]', s):
-        if m[0] == ',' and closed == [0, 0]:
+    closed = [0, 0, 0]
+    for m in re.finditer('[\[\],<>()]', s):
+        if m[0] == ',' and closed == [0, 0, 0]:
             splits.append(s[last: m.start(0)])
             last = m.end(0)
         elif m[0] == '<':
@@ -338,6 +338,10 @@ def split_params(s):
             closed[1] -= 1
         elif m[0] == ')':
             closed[1] += 1
+        elif m[0] == '[':
+            closed[2] -= 1
+        elif m[0] == ']':
+            closed[2] += 1
     splits.append(s[last:])
     return splits
 
@@ -362,10 +366,18 @@ def parsetype(s, variables=None):
     elif ':' in s:
         t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), s.split(':')))
         return Sub(t1, t2)
-    elif '=' in s:
-        t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), s.split('=')))
-        return Eq(t1, t2)
+        """
+        elif '=' in s:
+            t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), s.split('=')))
+            return Eq(t1, t2)
+        """
     else:
+
+        if s.endswith(']'):
+            t_val, _, params = s.partition('[')
+            params = parse_constraints(params.rpartition(']')[0], variables)
+            return ConstrainedType(parsetype(t_val, variables), params)
+
         indices = [index(s, '()'), index(s, '('), index(s, '<')]
         if all(map(lambda x: x == float('inf'), indices)):
             indicator = -1
@@ -390,6 +402,14 @@ def parsetype(s, variables=None):
                 return variables[s]
             else:
                 return Type(s)
+
+
+def parse_constraints(s, variables=None):
+    params = []
+    for param in split_params(s):
+        lv, _, rv = list(map(lambda x: x.strip(), param.partition('=')))
+        params.append(Eq(parsetype(lv, variables), parsetype(rv, variables)))
+    return params
 
 
 def viewed(s: Sub) -> Sub:
