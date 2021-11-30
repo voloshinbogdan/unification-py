@@ -1,13 +1,13 @@
 from defenitions import *
 from inheritance_parser import parse_file
 from data.meta_types import Type, GenType, Eq, Sub
-from data.context import set_context
+from data.context import set_context, clear_storage
 import unittest
 from parameterized import parameterized
 
+clear_storage()
 p = parse_file('example8.txt')
 set_context(p)
-
 
 class TestDefinitions(unittest.TestCase):
 
@@ -48,11 +48,11 @@ class TestDefinitions(unittest.TestCase):
 
     def test_cros(self):
         self.assertEqual('(LLeftBranch1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
-                         (parsetype('?(LTemplate<int>, LIntermediate2)'), [Eq('double', 'int')]))
+                         (parsetype('?(LTemplate<int[int = double]>, LIntermediate2)'), []))
         self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
                          (None, []))
         self.assertEqual('S' |cros| 'T',
-                         (parsetype('?(LTemplate<int>, LIntermediate2)'), [Eq('double', 'int')]))
+                         (parsetype('?(LTemplate<int[double=int]>, LIntermediate2)'), []))
 
     def test_vsub(self):
         self.assertEqual('U' |vsub| 'LBase', (True, []))
@@ -61,20 +61,20 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual('LRightBranch2' |vsub| 'LTemplate<int>', (True, [Eq('double', 'int')]))
 
     def test_rep(self):
-        self.assertEqual('T' |rep| 'S', parsetype('T(LRightBranch2, LIntermediate2) -> S(LLeftBranch2, LIntermediate2)'))
+        self.assertEqual('T' |rep| 'S', parsetype('T(LRightBranch2, LIntermediate2) -> S(LLeftBranch2, LIntermediate1)'))
 
     @parameterized.expand([
         ([Eq('S', 'T'), Sub('S', 'U')], ['float' |rep| 'bool'],
-         [Eq('S(LLeftBranch2, LIntermediate2)', 'T(LRightBranch2, LIntermediate2)'),
-          Sub('S(LLeftBranch2, LIntermediate2)', 'U(LTemplate<bool>, LIntermediate2)')]),
+         [Eq('S(LLeftBranch2, LIntermediate1)', 'T(LRightBranch2, LIntermediate2)'),
+          Sub('S(LLeftBranch2, LIntermediate1)', 'U(LTemplate<bool>, LBase)')]),
 
         ([Eq('S', 'T'), Sub('S', 'U')], ['LIntermediate2' |rep| 'LIntermediate1'],
          [Eq('S(LLeftBranch2, LIntermediate1)', 'T(LRightBranch2, LIntermediate1)'),
-          Sub('S(LLeftBranch2, LIntermediate1)', 'U(LTemplate<float>, LIntermediate1)')]),
+          Sub('S(LLeftBranch2, LIntermediate1)', 'U(LTemplate<float>, LBase)')]),
 
         ([Eq('S', 'T'), Sub('S', 'U')], ['S' |rep| 'bool', 'LTemplate<float>' |rep| 'Student'],
          [Eq('bool', 'T(LRightBranch2, LIntermediate2)'),
-          Sub('bool', 'U(Student, LIntermediate2)')])
+          Sub('bool', 'U(Student, LBase)')])
     ])
     def test_at(self, constraints, substitutions, expected):
         substitutions |at| constraints
