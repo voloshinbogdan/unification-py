@@ -113,6 +113,8 @@ class ConstrainedType(Type):
             self.name = any_type.name
             self.type = any_type
 
+        self.constraints = list(filter(lambda x: isinstance(x, Eq) and x.left != x.right, self.constraints))
+
     def __repr__(self):
         return self.__str__()
 
@@ -122,17 +124,13 @@ class ConstrainedType(Type):
     """
     def substitute(self, substitutions):
         return ConstrainedType(substitutions |at| self.type, substitutions |at| self.constraints)
+    """
 
     def __eq__(self, other):
-        if other is None:
+        if other is None or not isinstance(other, ConstrainedType):
             return False
 
-        subs = [variable_cons(self.variable)]
-        if isinstance(other, ConstrainedType):
-            subs.append(variable_cons(other.variable))
-
-        return subs |at| self.type == subs |at| other.type
-    """
+        return self.type == other.type and Counter(self.constraints) == Counter(other.constraints)
 
 
 variable_matches = None
