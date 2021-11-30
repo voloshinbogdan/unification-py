@@ -90,9 +90,11 @@ def test_lower_bound(X):
             return X
         Xu = unify_fail(unpack_constraints(X))
         if Xu != 'fail':
-            break
+            return True
 
         X.lower = get_parent(X.lower)
+        if not X.lower |gsub| X.upper |out| "_":
+            return False
 
 
 def unify_sub(constraints, c):
@@ -115,9 +117,11 @@ def unify_sub(constraints, c):
             S.lower |gsub| T.upper |out| SgT:  # Should be any way.
         Z = new_var(S.lower, T.upper)
         X = Z |cros| S |out| ZS  # May branch on X lower bound
-        test_lower_bound(X)
+        if not test_lower_bound(X):
+            raise Fail
         Y = Z |cros| T |out| ZT  # May branch on Y lower bound
-        test_lower_bound(Y)
+        if not test_lower_bound(Y):
+            raise Fail
         subs = []
         for vf, vt in [(S, X), (T, Y)]:
             tmp_subs = unify_fail(unpack_constraints(vf))
