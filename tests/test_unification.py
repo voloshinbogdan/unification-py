@@ -1,14 +1,14 @@
 import data.context as ctx
 from data.meta_types import parsetype, variable_matching_on, variable_matching_off
 from inheritance_parser import parse_file
-from data.context import set_context
+from data.context import set_context, clear_storage
 from unification import unify, Fail, simplify_solution_after_unify
 from defenitions import rep
 import unittest
 from parameterized import parameterized
 
 
-verbose = True
+verbose = False
 
 
 def parse_result(str):
@@ -26,23 +26,20 @@ class UnificationTest(unittest.TestCase):
 
     @parameterized.expand([
         ('example1.txt', """
-S : ?Y(LTemplate<int>, LIntermediate2)
+S : ?Y(LTemplate<int[int=F]>, LIntermediate2)
 
 Subs:
-F -> int
-U -> ?Y(LTemplate<int>, LIntermediate2)
+U -> ?Y(LTemplate<int[int=F]>, LIntermediate2)
 """),
         ('example2.txt', """
 
 Subs:
-F -> int
 S -> ?X(LIntermediate2, LIntermediate1)
 T -> ?X(LIntermediate2, LIntermediate1)
 """),
         ('example3.txt', """
 
 Subs:
-G -> double
 S -> ?X(LIntermediate2, LIntermediate1)
 T -> ?X(LIntermediate2, LIntermediate1)
 """),
@@ -62,9 +59,22 @@ S: U
 Subs:
 T -> ?Y(LRightBranch2<int, G>, LIntermediate1)
 """),
-        ('example8.txt', 'fail'),
-        ('example9.txt', 'fail')])
+        ('example8.txt', """
+S(LLeftBranch2, LIntermediate1) : ?X(LIntermediate2, LBase)
+
+Subs:
+U(LTemplate<float>, LBase) -> ?Y(LIntermediate2, LBase)
+"""),
+        ('example9.txt', """
+S(LLeftBranch2, LIntermediate1) : ?X(LTemplate<H[G = H, F = G]>, LBase)
+T(LRightBranch2, LIntermediate2) : ?X(LTemplate<H[G = H, F = G]>, LBase)
+
+Subs:
+U(LTemplate<F>, LBase) -> ?X(LTemplate<H[G = H, F = G]>, LBase)
+
+""")])
     def test_unify(self, fname, expected):
+        clear_storage()
         p = parse_file(fname)
         set_context(p)
         expected = parse_result(expected)
