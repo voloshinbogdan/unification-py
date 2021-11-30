@@ -1,6 +1,7 @@
 import data.context as ctx
 import re
 from collections import Counter
+from copy import deepcopy
 
 
 def easy_types(*params):
@@ -420,7 +421,7 @@ def new_var(lower, upper, constraints=None):
     global var_num
     if constraints is None:
         constraints = []
-    res = Variable('$Generated{0}'.format(var_num), lower, upper)
+    res = Variable('$Generated{0}'.format(var_num), deepcopy(lower), deepcopy(upper))
     pack_constraints(res, constraints)
     var_num += 1
     return res
