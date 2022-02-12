@@ -99,7 +99,7 @@ def test_lower_bound(X):
 
 def unify_sub(constraints, c):
     S, T = c.left, c.right
-    r_vsub, r_lay, SgT, ZS, ZT = [], [], [], [], []
+    r_vsub, r_lay, SgT, ZS, ZT, r_gsub = [], [], [], [], [], []
     if S |vsub| T |out| r_vsub:
         # May branch on T lower bound (TypeVal: Variable, Variable: Variable)
         if T |bel| Variable and T.lower |bel| GenType and r_vsub:
@@ -110,9 +110,17 @@ def unify_sub(constraints, c):
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
         X = new_var(S.lower, T)
         return _unify([S |rep| X] |at| (constraints |con| r_lay)) |adds| [S |rep| X]
-    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| r_lay:
-        X = new_var(S, T.upper)
-        return _unify([T |rep| X] |at| (constraints |con| r_lay)) |adds| [T |rep| X]
+    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S:
+        if S |lay| T |out| r_lay:
+            X = new_var(S, T.upper)
+            cons_in = r_lay
+        elif S |gsub| T.upper |out| r_gsub:
+            Z = new_var(S, T.upper)
+            X = Z |cros| T |out| ZT
+            cons_in = []
+        else:
+            raise Fail
+        return _unify([T |rep| X] |at| (constraints |con| cons_in)) |adds| [T |rep| X]
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
             S.lower |gsub| T.upper |out| SgT:  # Should be any way.
         Z = new_var(S.lower, T.upper)

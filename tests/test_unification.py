@@ -63,7 +63,7 @@ T -> ?Y(LRightBranch2<int, G>, LIntermediate1)
 S(LLeftBranch2, LIntermediate1) : ?X(LIntermediate2, LBase)
 
 Subs:
-U(LTemplate<float>, LBase) -> ?Y(LIntermediate2, LBase)
+U(LTemplate<float>, LBase) -> ?X(LIntermediate2, LBase)
 """),
         ('example9.txt', """
 S(LLeftBranch2, LIntermediate1) : ?X(LTemplate<H[G = H, F = G]>, LBase)
@@ -72,6 +72,10 @@ T(LRightBranch2, LIntermediate2) : ?X(LTemplate<H[G = H, F = G]>, LBase)
 Subs:
 U(LTemplate<F>, LBase) -> ?X(LTemplate<H[G = H, F = G]>, LBase)
 
+"""),
+        ('example10.txt', """
+Subs:
+S -> ?(LTemplate<H[G = H]>, LIntermediate1)
 """)])
     def test_unify(self, fname, expected):
         clear_storage()

@@ -1,0 +1,15 @@
+#Variables
+F()
+G()
+H()
+S(LLeftBranch2, LIntermediate1)
+#Inheritance
+LIntermediate1 : LBase
+LIntermediate2 : LIntermediate1
+LTemplate<()> : LIntermediate2
+LLeftBranch1 : LTemplate<G>
+LLeftBranch2 : LLeftBranch1
+LRightBranch1 : LTemplate<H>
+LRightBranch2 : LRightBranch1
+#Constraints
+LRightBranch1: S
