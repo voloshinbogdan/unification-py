@@ -102,6 +102,10 @@ def max_type(t1, t2):
         return None, []
 
 
+def zipl(*params):
+    return list(map(list, zip(*filter(lambda x: (x is not None) and (x != []), params))))
+
+
 @easy_types()
 def variables_cross(v1, v2):
     assert v1 |bel| Variable and v2 |bel| Variable, "Only two Variables can be crossed"
@@ -112,7 +116,7 @@ def variables_cross(v1, v2):
     if lower is None or upper is None or not lower |gsub| upper |out| l_sub_u:
         return None, []
     else:
-        return new_var(lower, upper, rmin), rmax + l_sub_u
+        return new_var(lower, upper, zipl(rmin, l_sub_u)), rmax
 
 
 @easy_types()
