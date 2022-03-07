@@ -113,7 +113,7 @@ class ConstrainedType(Type):
             self.name = any_type.name
             self.type = any_type
 
-        self.constraints = list(filter(lambda x: isinstance(x, Eq) and x.left != x.right, self.constraints))
+        self.constraints = list(set(filter(lambda x: isinstance(x, Eq) and x.left != x.right, self.constraints)))
 
     def __repr__(self):
         return self.__str__()
@@ -121,10 +121,8 @@ class ConstrainedType(Type):
     def __str__(self):
         return "{0}{1}".format(self.type, self.constraints)
 
-    """
     def substitute(self, substitutions):
-        return ConstrainedType(substitutions |at| self.type, substitutions |at| self.constraints)
-    """
+        return ConstrainedType(substitute(substitutions, self.type), substitute(substitutions, self.constraints))
 
     def __eq__(self, other):
         if other is None or not isinstance(other, ConstrainedType):
@@ -473,9 +471,7 @@ def substitute(substitutions, constraints):
             else:
                 res.append(substitute(substitutions, c))
         if isinstance(constraints, list):
-            constraints.clear()
-            constraints.extend(res)
-            return constraints
+            return res
         else:
             return tuple(res)
     elif isinstance(constraints, TypeVal) and (constraints == BOTTOM or constraints == TOP):

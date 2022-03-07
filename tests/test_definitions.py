@@ -77,8 +77,7 @@ class TestDefinitions(unittest.TestCase):
           Sub('bool', 'U(Student, LBase)')])
     ])
     def test_at(self, constraints, substitutions, expected):
-        substitutions |at| constraints
-        self.assertSequenceEqual(constraints, expected)
+        self.assertSequenceEqual(substitutions |at| constraints, expected)
 
 
     def test_infv(self):

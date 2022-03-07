@@ -65,6 +65,10 @@ def _unify(constraints):
 
 def unify_eq(constraints, S, T):
     r_lay, cross = [], []
+    if S |bel| ConstrainedType:
+        return _unify(constraints |con| ([Eq(S.type, T)] + S.constraints))
+    if T |bel| ConstrainedType:
+        return _unify(constraints |con| ([Eq(S, T.type)] + T.constraints))
     if S |bel| Type and T |bel| Type and S == T:
         return _unify(constraints)
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
@@ -97,6 +101,10 @@ def test_lower_bound(X):
 
 def unify_sub(constraints, S, T):
     r_vsub, r_lay, SgT, ZS, ZT, r_gsub = [], [], [], [], [], []
+    if S |bel| ConstrainedType:
+        return _unify(constraints |con| ([Sub(S.type, T)] + S.constraints))
+    if T |bel| ConstrainedType:
+        return _unify(constraints |con| ([Sub(S, T.type)] + T.constraints))
     if S |vsub| T |out| r_vsub:
         # May branch on T lower bound (TypeVal: Variable, Variable: Variable)
         if T |bel| Variable and T.lower |bel| GenType and r_vsub:

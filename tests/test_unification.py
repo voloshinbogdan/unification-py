@@ -76,6 +76,10 @@ U(LTemplate<F>, LBase) -> ?X(LTemplate<H[G = H, F = G]>, LBase)
         ('example10.txt', """
 Subs:
 S -> ?(LTemplate<H[G = H]>, LIntermediate1)
+"""),
+        ('example11.txt', """
+Subs:
+S -> ?(LTemplate<H[G = H]>, LIntermediate1)
 """)])
     def test_unify(self, fname, expected):
         clear_storage()
