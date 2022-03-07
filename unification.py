@@ -54,16 +54,16 @@ def _unify(constraints):
     if not constraints:
         return [], []
     _, v = heapq.heappop(constraints)
+    S, T = v.left, v.right
     if isinstance(v, Sub) and v.view:
         return constraints |con| [v], []
     if isinstance(v, Eq):
-        return unify_eq(constraints, v)
+        return unify_eq(constraints, S, T)
     elif isinstance(v, Sub):
-        return unify_sub(constraints, v)
+        return unify_sub(constraints, S, T)
 
 
-def unify_eq(constraints, c):
-    S, T = c.left, c.right
+def unify_eq(constraints, S, T):
     r_lay, cross = [], []
     if S |bel| Type and T |bel| Type and S == T:
         return _unify(constraints)
@@ -95,8 +95,7 @@ def test_lower_bound(X):
         return test_lower_bound(new_var(get_parent(X.lower), X.upper))
 
 
-def unify_sub(constraints, c):
-    S, T = c.left, c.right
+def unify_sub(constraints, S, T):
     r_vsub, r_lay, SgT, ZS, ZT, r_gsub = [], [], [], [], [], []
     if S |vsub| T |out| r_vsub:
         # May branch on T lower bound (TypeVal: Variable, Variable: Variable)
