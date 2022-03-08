@@ -156,9 +156,9 @@ class Variable:
         if self.name in substitutions:
             return substitute(substitutions, substitutions[self.name].to)
         else:
-            return Variable(
-                self.name, substitute(substitutions, self.lower),
-                substitute(substitutions, self.upper))
+            return new_var(
+                substitute(substitutions, self.lower),
+                substitute(substitutions, self.upper), name=self.name)
 
     def __str__(self):
         return "{0}({1}, {2})".format(self.name, str(self.lower), str(self.upper))
@@ -426,7 +426,7 @@ def make_eq_constraints(params1, params2):
 var_num = 0
 
 
-def new_var(lower, upper, constraints=None):
+def new_var(lower, upper, constraints=None, name=None):
     """
     Generate new variable with generated name
     :param lower: lower bound
@@ -437,8 +437,12 @@ def new_var(lower, upper, constraints=None):
     global var_num
     if constraints is None:
         constraints = []
-    res = Variable('$Generated{0}'.format(var_num), deepcopy(lower), deepcopy(upper))
+    if name is None:
+        name = '$Generated{0}'.format(var_num)
+    res = Variable(name, deepcopy(lower), deepcopy(upper))
     pack_constraints(res, constraints)
+    if res.lower == res.upper:
+        res = res.lower
     var_num += 1
     return res
 
