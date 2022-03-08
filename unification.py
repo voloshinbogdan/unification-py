@@ -155,4 +155,8 @@ def simplify_solution_after_unify(solution):
         else:
             base_subs.append(s)
 
-    return intermediate_subs |at| constraints, intermediate_subs |at| base_subs
+    res1 = []
+    for i in range(len(base_subs)):
+        res1.append((intermediate_subs + base_subs[:i] + base_subs[i+1:]) |at| base_subs[i])
+
+    return intermediate_subs |at| constraints, res1

@@ -122,7 +122,10 @@ class ConstrainedType(Type):
         return "{0}{1}".format(self.type, self.constraints)
 
     def substitute(self, substitutions):
-        return ConstrainedType(substitute(substitutions, self.type), substitute(substitutions, self.constraints))
+        res = ConstrainedType(substitute(substitutions, self.type), substitute(substitutions, self.constraints))
+        if not res.constraints:
+            res = res.type
+        return res
 
     def __eq__(self, other):
         if other is None or not isinstance(other, ConstrainedType):

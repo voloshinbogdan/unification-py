@@ -80,7 +80,15 @@ S -> ?(LTemplate<H[G = H]>, LIntermediate1)
         ('example11.txt', """
 Subs:
 S -> ?(LTemplate<H[G = H]>, LIntermediate1)
-""")])
+"""),
+        ('example12.txt', """
+Subs:
+S(LLeftBranch2, LIntermediate2) -> ?(LLeftBranch2, LTemplate<int>)
+G($Bottom, $Top) -> int
+F($Bottom, $Top) -> int
+U(LTemplate<int>, LIntermediate2) -> LTemplate<int>
+""")
+    ])
     def test_unify(self, fname, expected):
         clear_storage()
         p = parse_file(fname)
