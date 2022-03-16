@@ -165,6 +165,11 @@ def unify_sub(constraints, S, T):
         raise Fail
 
 
+def unbranching():
+    # We should have to consider substitution results (there is branching!)
+    pass
+
+
 def simplify_solution_after_unify(solution):
     intermediate_subs = []
     base_subs = []
