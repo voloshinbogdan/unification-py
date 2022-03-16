@@ -139,6 +139,8 @@ def is_in_free_variables(v, t):
         return True
     if t |bel| GenType:
         return all([is_in_free_variables(v, p) for p in t.params])
+    if t |bel| Variable:
+        return all([is_in_free_variables(v, t.lower), is_in_free_variables(v, t.upper)])
     return False
 
 
