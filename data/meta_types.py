@@ -88,10 +88,10 @@ class GenType(TypeVal):
         return self.name == other.name and self.params == other.params
 
 
-class ConstrainedType(Type):
+class ConstrainedType(TypeVal):
 
     @easy_types(1)
-    def __init__(self, any_type, constraints):
+    def __init__(self, any_type, constraints):  #TODO: Можно ли заменить равенство на подстановки?
         if isinstance(constraints, list):
             self.constraints = constraints
         else:
