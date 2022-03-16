@@ -65,6 +65,7 @@ def _unify(constraints):
 
 def unify_eq(constraints, S, T):
     r_lay, cross = [], []
+    subs = []
     if S |bel| ConstrainedType:
         return _unify(constraints |con| ([Eq(S.type, T)] + S.constraints))
     if T |bel| ConstrainedType:
@@ -72,14 +73,22 @@ def unify_eq(constraints, S, T):
     if S |bel| Type and T |bel| Type and S == T:
         return _unify(constraints)
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
-        return _unify([S |rep| T] |at| (constraints |con| r_lay)) |adds| [S |rep| T]
+        if r_lay:
+            _, subs = unify(r_lay)
+        subs += [S |rep| T]
+        return _unify(subs |at| constraints) |adds| subs
     elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| r_lay:
-        return _unify([T |rep| S] |at| (constraints |con| r_lay)) |adds| [T |rep| S]
-    elif S |bel| Variable and T |bel| Variable:
+        if r_lay:
+            _, subs = unify(r_lay)
+        subs += [T |rep| S]
+        return _unify(subs |at| constraints) |adds| subs
+    elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S:
         X = test_lower_bound(S |cros| T |out| cross)  # May branch on X lower bound
         if X is not None:
-            subs = [S | rep | X, T | rep | X]
-            return _unify(subs |at| (constraints |con| cross)) |adds| subs
+            if cross:
+                _, subs = unify(cross)
+            subs += [S | rep | X, T | rep | X]
+            return _unify(subs |at| constraints) |adds| subs
         else:
             raise Fail
     elif S |bel| GenType and T |bel| GenType and S.name == T.name:
@@ -101,23 +110,29 @@ def test_lower_bound(X):
 
 def unify_sub(constraints, S, T):
     r_vsub, r_lay, SgT, ZS, ZT, r_gsub = [], [], [], [], [], []
+    subs = []
     if S |bel| ConstrainedType:
         return _unify(constraints |con| ([Sub(S.type, T)] + S.constraints))
     if T |bel| ConstrainedType:
         return _unify(constraints |con| ([Sub(S, T.type)] + T.constraints))
-    if S |vsub| T |out| r_vsub:
+    if S |vsub| T |out| r_vsub:  #TODO:  Здесь проаерятся, что S.Upper : T.Lower и S : T.Lower и S.Upper : T
         # May branch on T lower bound (TypeVal: Variable, Variable: Variable)
         if T |bel| Variable and T.lower |bel| GenType and r_vsub:
             Tnew = test_lower_bound(new_var(T.lower, T.upper, r_vsub))
             return _unify([T |rep| Tnew] |at| constraints) |adds| [T |rep| Tnew]
         else:
-            return _unify(constraints |con| r_vsub)
+            if r_vsub:
+                _, subs = unify(r_vsub)
+            return _unify(subs |at| constraints) |adds| subs
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
-        X = new_var(S.lower, T)
-        return _unify([S |rep| X] |at| (constraints |con| r_lay)) |adds| [S |rep| X]
-    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S:
+        if r_lay:
+            _, subs = unify(r_lay)
+        X = new_var(S.lower, T)  # MAY BRANCH ON LOWER BOUND X OR NOT? No, S.lower O: T generate constraints, which can be excluded only when T excluded from variable, which leads to empty variable
+        subs += [S |rep| X]
+        return _unify(subs |at| (constraints |con| r_lay)) |adds| subs
+    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S:  #TODO: Заменить всё на пересечение
         if S |lay| T |out| r_lay:
-            X = new_var(S, T.upper)
+            X = new_var(S, T.upper)  #TODO: MAY BRANCH ON LOWER BOUND X OR NOT?
             cons_in = r_lay
         elif S |gsub| T.upper |out| r_gsub:
             Z = new_var(S, T.upper)
@@ -125,7 +140,11 @@ def unify_sub(constraints, S, T):
             cons_in = []
         else:
             raise Fail
-        return _unify([T |rep| X] |at| (constraints |con| cons_in)) |adds| [T |rep| X]
+
+        if cons_in:
+            _, subs = unify(cons_in)
+        subs += [T |rep| X]
+        return _unify(subs |at| constraints) |adds| subs
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
             S.lower |gsub| T.upper |out| SgT:  # Should be any way.
         Z = new_var(S.lower, T.upper)
@@ -137,9 +156,11 @@ def unify_sub(constraints, S, T):
             if tmp_subs[1] |at| vf.lower != tmp_subs[1] |at| vt.lower or\
                     tmp_subs[1] |at| vf.upper != tmp_subs[1] |at| vt.upper:
                 subs.append(vf |rep| vt)
+        if SgT + ZS + ZT:
+            _, s = unify(SgT + ZS + ZT)
+            subs += s
 
-        return _unify(subs |at| (constraints |con| SgT |con| ZS |con| ZT) |con| [subs |at| viewed(Sub(S, T))])\
-            |adds| subs
+        return _unify(subs |at| (constraints |con| [viewed(Sub(S, T))])) |adds| subs
     else:
         raise Fail
 
