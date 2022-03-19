@@ -130,19 +130,11 @@ def unify_sub(constraints, S, T):
         X = new_var(S.lower, T)  # MAY BRANCH ON LOWER BOUND X OR NOT? No, S.lower O: T generate constraints, which can be excluded only when T excluded from variable, which leads to empty variable
         subs += [S |rep| X]
         return _unify(subs |at| (constraints |con| r_lay)) |adds| subs
-    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S:  #TODO: Заменить всё на пересечение
-        if S |lay| T |out| r_lay:
-            X = new_var(S, T.upper)  #TODO: MAY BRANCH ON LOWER BOUND X OR NOT?
-            cons_in = r_lay
-        elif S |gsub| T.upper |out| r_gsub:
-            Z = new_var(S, T.upper)
-            X = test_lower_bound(Z |cros| T |out| ZT)
-            cons_in = []
-        else:
-            raise Fail
-
-        if cons_in:
-            _, subs = unify(cons_in)
+    elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |gsub| T.upper |out| r_gsub:
+        Z = new_var(S, T.upper, r_gsub)
+        X = test_lower_bound(Z |cros| T |out| ZT)
+        if ZT:
+            _, subs = unify(ZT)
         subs += [T |rep| X]
         return _unify(subs |at| constraints) |adds| subs
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
