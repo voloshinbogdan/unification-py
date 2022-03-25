@@ -107,19 +107,6 @@ def zipl(*params):
 
 
 @easy_types()
-def variables_cross(v1, v2):
-    assert v1 |bel| Variable and v2 |bel| Variable, "Only two Variables can be crossed"
-    lower, rmin = min_common_subtype(v1.lower, v2.lower)
-    upper, rmax = max_type(v1.upper, v2.upper)
-
-    l_sub_u = []
-    if lower is None or upper is None or not lower |gsub| upper |out| l_sub_u:
-        return None, []
-    else:
-        return new_var(lower, upper, zipl(rmin, l_sub_u)), rmax
-
-
-@easy_types()
 def variable_subtype(v1, v2):
     if check_bottom_top(v1, v2):
         return True, []
@@ -168,11 +155,6 @@ Operation t |lay| v define is type t inside type variable v. Uses @easy_types.
 Returns (bool, [Constraint]). Use with out: t |lay| v |out| "t_in_v".
 """
 
-cros = Infix(variables_cross)
-"""
-Operation v1 |cros| v2 calculates maximum general type diapason into new general variable. Uses @easy_types.
-Returns (Variable, [Constraint]). Use with out: v1 |cros| v2 |out| "v1_cros_v2".
-"""
 
 out = Infix(ctx.out_helper)
 """

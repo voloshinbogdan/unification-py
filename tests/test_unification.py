@@ -2,7 +2,7 @@ import data.context as ctx
 from data.meta_types import parsetype, variable_matching_on, variable_matching_off
 from inheritance_parser import parse_file
 from data.context import set_context, clear_storage
-from unification import unify, Fail, simplify_solution_after_unify
+from unification import unify, Fail, simplify_solution_after_unify, cros
 from defenitions import rep
 import unittest
 from parameterized import parameterized
@@ -23,6 +23,17 @@ def parse_result(str):
 
 
 class UnificationTest(unittest.TestCase):
+
+    def test_cros(self):
+        clear_storage()
+        p = parse_file('example8.txt')
+        set_context(p)
+        self.assertEqual('(LLeftBranch1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
+                         (parsetype('?(LTemplate<int[int = double]>, LIntermediate2)'), []))
+        self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
+                         (None, []))
+        self.assertEqual('S' |cros| 'T',
+                         (parsetype('?(LTemplate<int[double=int]>, LIntermediate2)'), []))
 
     @parameterized.expand([
         ('example1.txt', """
@@ -86,7 +97,7 @@ Subs:
 S(LLeftBranch2, LIntermediate2) -> ?(LLeftBranch2, LTemplate<int>)
 G($Bottom, $Top) -> int
 F($Bottom, $Top) -> int
-U(LTemplate<int>, LIntermediate2) -> LTemplate<int>
+U(LTemplate<int>, LIntermediate2) -> ?(LTemplate<int>, LTemplate<int>)
 """)
     ])
     def test_unify(self, fname, expected):

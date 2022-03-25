@@ -46,14 +46,6 @@ class TestDefinitions(unittest.TestCase):
         self.assertEqual(max_type('LLeftBranch2', 'LTemplate<F>'), (Type('LLeftBranch2'), [Eq('int', 'F')]))
         self.assertEqual(max_type('FakeClass', 'LLeftBranch1'), (None, []))
 
-    def test_cros(self):
-        self.assertEqual('(LLeftBranch1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
-                         (parsetype('?(LTemplate<int[int = double]>, LIntermediate2)'), []))
-        self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
-                         (None, []))
-        self.assertEqual('S' |cros| 'T',
-                         (parsetype('?(LTemplate<int[double=int]>, LIntermediate2)'), []))
-
     def test_vsub(self):
         self.assertEqual('U' |vsub| 'LBase', (True, []))
         self.assertEqual('U' |vsub| 'S', (False, []))

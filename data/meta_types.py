@@ -91,11 +91,11 @@ class GenType(TypeVal):
 class ConstrainedType(TypeVal):
 
     @easy_types(1)
-    def __init__(self, any_type, constraints):  #TODO: Можно ли заменить равенство на подстановки?
-        if isinstance(constraints, list):
-            self.constraints = constraints
+    def __init__(self, any_type, subs):  #TODO: Можно ли заменить равенство на подстановки?
+        if isinstance(subs, list):
+            self.constraints = subs
         else:
-            self.constraints = [constraints]
+            self.constraints = [subs]
 
         for c in self.constraints:
             if isinstance(c.left, ConstrainedType):
@@ -159,9 +159,10 @@ class Variable:
         if self.name in substitutions:
             return substitute(substitutions, substitutions[self.name].to)
         else:
-            return new_var(
+            return Variable(
+                self.name,
                 substitute(substitutions, self.lower),
-                substitute(substitutions, self.upper), name=self.name)
+                substitute(substitutions, self.upper))
 
     def __str__(self):
         return "{0}({1}, {2})".format(self.name, str(self.lower), str(self.upper))
@@ -429,25 +430,11 @@ def make_eq_constraints(params1, params2):
 var_num = 0
 
 
-def new_var(lower, upper, constraints=None, name=None):
-    """
-    Generate new variable with generated name
-    :param lower: lower bound
-    :param upper: upper bound
-    :param constraints: constraints
-    :return: generated variable
-    """
+def new_var_name():
     global var_num
-    if constraints is None:
-        constraints = []
-    if name is None:
-        name = '$Generated{0}'.format(var_num)
-    res = Variable(name, deepcopy(lower), deepcopy(upper))
-    pack_constraints(res, constraints)
-    if res.lower == res.upper:
-        res = res.lower
+    name = '$Generated{0}'.format(var_num)
     var_num += 1
-    return res
+    return name
 
 
 def reset_var_num():
@@ -485,19 +472,3 @@ def substitute(substitutions, constraints):
         return constraints
     else:
         return constraints.substitute(substitutions)
-
-
-def pack_constraints(X, constraints):
-    if isinstance(X.lower, GenType) and constraints:
-        X.lower.params = [ConstrainedType(p, c) for p, c in zip(X.lower.params, constraints)]
-
-
-def unpack_constraints(X):
-    if isinstance(X.lower, GenType):
-        res = []
-        for p in X.lower.params:
-            if isinstance(p, ConstrainedType):
-                res.extend(p.constraints)
-        return res
-    else:
-        return []
