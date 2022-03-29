@@ -98,6 +98,10 @@ S(LLeftBranch2, LIntermediate2) -> ?(LLeftBranch2, LTemplate<int>)
 G($Bottom, $Top) -> int
 F($Bottom, $Top) -> int
 U(LTemplate<F()>, LIntermediate2) -> ?(LTemplate<int>, LTemplate<int>)
+"""),
+        ('example13.txt', """
+Subs:
+F(LTemplate<G, G>, LBase) -> ?(LIntermediate2, LBase)
 """)
     ])
     def test_unify(self, fname, expected):
