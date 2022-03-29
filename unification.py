@@ -118,7 +118,7 @@ def variables_cross(v1, v2):
         return new_var(lower, upper, zipl(rmin, l_sub_u)), rmax
 
 
-def add_substitutions(res, subs):
+def add_substitutions(res, subs):  # TODO: Fix substitution add to composing substitutions
     return res[0], res[1] + subs
 
 
@@ -181,19 +181,19 @@ def unify_eq(constraints, S, T):
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
         if r_lay:
             _, subs = unify([S |rep| T] |at| r_lay)
-        subs += subs |at| [S |rep| T]
+        subs += [S |rep| T]
         return _unify(subs |at| constraints) |adds| subs
     elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| r_lay:
         if r_lay:
             _, subs = unify([T |rep| S] |at| r_lay)
-        subs += subs |at| [T |rep| S]
+        subs += [T |rep| S]
         return _unify(subs |at| constraints) |adds| subs
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S:
         X = test_lower_bound(S |cros| T |out| cross)  # May branch on X lower bound
         if X is not None:
             if cross:
                 _, subs = unify([S |rep| X, T |rep| X] |at| cross)
-            subs += subs |at| [S |rep| X, T |rep| X]
+            subs += [S |rep| X, T |rep| X]
             return _unify(subs |at| constraints) |adds| subs
         else:
             raise Fail
@@ -230,14 +230,14 @@ def unify_sub(constraints, S, T):
         X = new_var(S.lower, T)  # MAY BRANCH ON LOWER BOUND X OR NOT? No, S.lower O: T generate constraints, which can be excluded only when T excluded from variable, which leads to empty variable
         if r_lay:
             _, subs = unify([S |rep| X] |at| r_lay)
-        subs += subs |at| [S |rep| X]
+        subs += [S |rep| X]
         return _unify(subs |at| (constraints |con| r_lay)) |adds| subs
     elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |gsub| T.upper |out| r_gsub:
         Z = new_var(S, T.upper, r_gsub)
         X = test_lower_bound(Z |cros| T |out| ZT)
         if ZT:
             _, subs = unify([T |rep| X] |at| ZT)
-        subs += subs |at| [T |rep| X]
+        subs += [T |rep| X]
         return _unify(subs |at| constraints) |adds| subs
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
             S.lower |gsub| T.upper |out| SgT:  # Should be any way.
@@ -253,7 +253,7 @@ def unify_sub(constraints, S, T):
                 subs.append(vf |rep| vt)
         if SgT + ZS + ZT:
             _, s = unify(subs |at| (SgT + ZS + ZT))
-            subs = s + (s |at| subs)
+            subs += s
 
         return _unify(subs |at| (constraints |con| [viewed(Sub(S, T))])) |adds| subs
     else:
