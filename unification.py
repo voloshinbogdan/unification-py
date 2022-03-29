@@ -22,18 +22,71 @@ def variable_cons(variable):
 
 def pack_constraints(X, constraints):
     if isinstance(X.lower, GenType) and constraints:
-        X.lower.params = [ConstrainedType(p, c) for p, c in zip(X.lower.params, constraints)]
+        params = []
+        for p, c in zip(X.lower.params, constraints):
+            if not isinstance(c, list):
+                c = [c]
+            subs = []
+            t = p
+            if isinstance(p, ConstrainedType):
+                subs += p.constraints
+                t = p.type
+
+            cons = []
+            for con in c:
+                l, r = con.left, con.right
+                if isinstance(l, ConstrainedType):
+                    subs += l.constraints
+                    l = l.type
+                if isinstance(r, ConstrainedType):
+                    subs += r.constraints
+                    r = r.type
+                cons.append(Eq(l, r))
+
+            res = unify_fail(subs |at| (cons + make_eq_on_contr_substitutions(subs)))
+            if res != 'fail':
+                params.append(ConstrainedType(t, simplify_subs(res[1] + subs)))
+            else:
+                params.append(ConstrainedType(t, [res]))
+        X.lower.params = params
 
 
-def unpack_constraints(X):
+def unpack_subs(X):
+    subs = []
     if isinstance(X.lower, GenType):
-        res = []
         for p in X.lower.params:
             if isinstance(p, ConstrainedType):
-                res.extend(p.constraints)
-        return res
+                subs.extend(p.constraints)
+    return subs
+
+
+def unpack_eq(X):
+    if isinstance(X.lower, GenType):
+        constraints = []
+        for p in X.lower.params:
+            if isinstance(p, ConstrainedType):
+                constraints.extend(p.constraints)
+        if 'fail' in constraints:
+            return ['fail']
+
+        return make_eq_on_contr_substitutions(constraints)
     else:
         return []
+
+
+def make_eq_on_contr_substitutions(constraints):
+    sub_dict = {}
+    for r in constraints:
+        if r.of not in sub_dict:
+            sub_dict[r.of] = [r.to]
+        else:
+            sub_dict[r.of].append(r.to)
+    res = []
+    for k, v in sub_dict.items():
+        if len(v) > 1:
+            for i in range(1, len(v)):
+                res.append(Eq(v[i - 1], v[i]))
+    return res
 
 
 def new_var(lower, upper, constraints=None):
@@ -49,7 +102,7 @@ def new_var(lower, upper, constraints=None):
     name = new_var_name()
     res = Variable(name, deepcopy(lower), deepcopy(upper))
     pack_constraints(res, constraints)
-    return res
+    return test_lower_bound(res)
 
 
 @easy_types()
@@ -87,10 +140,13 @@ Returns (Variable, [Constraint]). Use with out: v1 |cros| v2 |out| "v1_cros_v2".
 
 
 def unify_fail(constraints):
-    try:
-        return unify(constraints)
-    except Fail:
+    if 'fail' in constraints:
         return 'fail'
+    else:
+        try:
+            return unify(constraints)
+        except Fail:
+            return 'fail'
 
 
 def unify(constraints):
@@ -117,27 +173,27 @@ def unify_eq(constraints, S, T):
     r_lay, cross = [], []
     subs = []
     if S |bel| ConstrainedType:
-        return _unify(constraints |con| ([Eq(S.type, T)] + S.constraints))
+        return _unify(S.constraints |at| (constraints |con| [Eq(S.type, T)])) |adds| S.constraints
     if T |bel| ConstrainedType:
-        return _unify(constraints |con| ([Eq(S, T.type)] + T.constraints))
-    if S |bel| Type and T |bel| Type and S == T:
+        return _unify(T.constraints |at| (constraints |con| [Eq(S, T.type)])) |adds| T.constraints
+    if S == T:
         return _unify(constraints)
     elif S |bel| Variable and T |bel| TypeVal and not S |infv| T and T |lay| S |out| r_lay:
         if r_lay:
             _, subs = unify([S |rep| T] |at| r_lay)
-        subs += [S |rep| T]
+        subs += subs |at| [S |rep| T]
         return _unify(subs |at| constraints) |adds| subs
     elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |lay| T |out| r_lay:
         if r_lay:
             _, subs = unify([T |rep| S] |at| r_lay)
-        subs += [T |rep| S]
+        subs += subs |at| [T |rep| S]
         return _unify(subs |at| constraints) |adds| subs
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S:
         X = test_lower_bound(S |cros| T |out| cross)  # May branch on X lower bound
         if X is not None:
             if cross:
-                _, subs = unify([S | rep | X, T | rep | X] |at| cross)
-            subs += [S | rep | X, T | rep | X]
+                _, subs = unify([S |rep| X, T |rep| X] |at| cross)
+            subs += subs |at| [S |rep| X, T |rep| X]
             return _unify(subs |at| constraints) |adds| subs
         else:
             raise Fail
@@ -152,7 +208,7 @@ def test_lower_bound(X):
         return None
     elif not X.lower |gsub| X.upper |out| "_":
         raise Fail
-    elif unify_fail(unpack_constraints(X)) != 'fail':
+    elif unify_fail(unpack_eq(X)) != 'fail':
         return X
     else:
         return test_lower_bound(new_var(get_parent(X.lower), X.upper))
@@ -161,10 +217,6 @@ def test_lower_bound(X):
 def unify_sub(constraints, S, T):
     r_vsub, r_lay, SgT, ZS, ZT, r_gsub = [], [], [], [], [], []
     subs = []
-    if S |bel| ConstrainedType:
-        return _unify(constraints |con| ([Sub(S.type, T)] + S.constraints))
-    if T |bel| ConstrainedType:
-        return _unify(constraints |con| ([Sub(S, T.type)] + T.constraints))
     if S |vsub| T |out| r_vsub:  #TODO:  Здесь проаерятся, что S.Upper : T.Lower и S : T.Lower и S.Upper : T
         # May branch on T lower bound (TypeVal: Variable, Variable: Variable)
         if T |bel| Variable and T.lower |bel| GenType and r_vsub:
@@ -178,14 +230,14 @@ def unify_sub(constraints, S, T):
         X = new_var(S.lower, T)  # MAY BRANCH ON LOWER BOUND X OR NOT? No, S.lower O: T generate constraints, which can be excluded only when T excluded from variable, which leads to empty variable
         if r_lay:
             _, subs = unify([S |rep| X] |at| r_lay)
-        subs += [S |rep| X]
+        subs += subs |at| [S |rep| X]
         return _unify(subs |at| (constraints |con| r_lay)) |adds| subs
     elif S |bel| TypeVal and T |bel| Variable and not T |infv| S and S |gsub| T.upper |out| r_gsub:
         Z = new_var(S, T.upper, r_gsub)
         X = test_lower_bound(Z |cros| T |out| ZT)
         if ZT:
             _, subs = unify([T |rep| X] |at| ZT)
-        subs += [T |rep| X]
+        subs += subs |at| [T |rep| X]
         return _unify(subs |at| constraints) |adds| subs
     elif S |bel| Variable and T |bel| Variable and not S |infv| T and not T |infv| S and\
             S.lower |gsub| T.upper |out| SgT:  # Should be any way.
@@ -194,13 +246,14 @@ def unify_sub(constraints, S, T):
         Y = test_lower_bound(Z |cros| T |out| ZT)  # May branch on Y lower bound
         subs = []
         for vf, vt in [(S, X), (T, Y)]:
-            _, tmp_subs = unify(unpack_constraints(vf))
+            _, tmp_subs = unify(unpack_eq(vf))
+            tmp_subs = simplify_subs(tmp_subs + unpack_subs(vf))
             if tmp_subs |at| vf.lower != tmp_subs |at| vt.lower or\
                     tmp_subs |at| vf.upper != tmp_subs |at| vt.upper:
                 subs.append(vf |rep| vt)
         if SgT + ZS + ZT:
             _, s = unify(subs |at| (SgT + ZS + ZT))
-            subs += s
+            subs = s + (s |at| subs)
 
         return _unify(subs |at| (constraints |con| [viewed(Sub(S, T))])) |adds| subs
     else:
@@ -210,6 +263,31 @@ def unify_sub(constraints, S, T):
 def unbranching():
     # We should have to consider substitution results (there is branching!)
     pass
+
+
+def simplify_subs(subs):
+    subs = list(set(subs))
+
+    check_base = {}
+
+    for s in subs:
+        if s.of not in check_base:
+            check_base[s.of] = True
+        check_base[s.to] = False
+
+    base_subs = []
+    intermediate_subs = []
+    for s in subs:
+        if check_base[s.of]:
+            base_subs.append(s)
+        else:
+            intermediate_subs.append(s)
+
+    res1 = []
+    for i in range(len(base_subs)):
+        res1.append((intermediate_subs + base_subs[:i] + base_subs[i+1:]) |at| base_subs[i])
+
+    return res1
 
 
 def simplify_solution_after_unify(solution):

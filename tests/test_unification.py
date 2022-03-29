@@ -29,18 +29,18 @@ class UnificationTest(unittest.TestCase):
         p = parse_file('example8.txt')
         set_context(p)
         self.assertEqual('(LLeftBranch1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
-                         (parsetype('?(LTemplate<int[int = double]>, LIntermediate2)'), []))
+                         (parsetype('?(LIntermediate2, LIntermediate2)'), []))
         self.assertEqual('(LIntermediate1, LBase)' |cros| '(LRightBranch2, LIntermediate2)',
                          (None, []))
         self.assertEqual('S' |cros| 'T',
-                         (parsetype('?(LTemplate<int[double=int]>, LIntermediate2)'), []))
+                         (parsetype('?(LIntermediate2, LIntermediate2)'), []))
 
     @parameterized.expand([
         ('example1.txt', """
-S : ?Y(LTemplate<int[int=F]>, LIntermediate2)
+S : ?Y(LTemplate<int[F->int]>, LIntermediate2)
 
 Subs:
-U -> ?Y(LTemplate<int[int=F]>, LIntermediate2)
+U -> ?Y(LTemplate<int[F->int]>, LIntermediate2)
 """),
         ('example2.txt', """
 
@@ -77,27 +77,27 @@ Subs:
 U(LTemplate<float>, LBase) -> ?X(LIntermediate2, LBase)
 """),
         ('example9.txt', """
-S(LLeftBranch2, LIntermediate1) : ?X(LTemplate<H[G = H, F = G]>, LBase)
-T(LRightBranch2, LIntermediate2) : ?X(LTemplate<H[G = H, F = G]>, LBase)
+S(LLeftBranch2, LIntermediate1) : ?X(LTemplate<H[G -> ?Y(), H -> ?Y(), F -> ?Y()]>, LBase)
+T(LRightBranch2, LIntermediate2) : ?X(LTemplate<H[G -> ?Y(), H -> ?Y(), F -> ?Y()]>, LBase)
 
 Subs:
-U(LTemplate<F>, LBase) -> ?X(LTemplate<H[G = H, F = G]>, LBase)
+U(LTemplate<F>, LBase) -> ?X(LTemplate<H[G -> ?Y(), H -> ?Y(), F -> ?Y()]>, LBase)
 
 """),
         ('example10.txt', """
 Subs:
-S -> ?(LTemplate<H[G = H]>, LIntermediate1)
+S -> ?(LTemplate<H[G -> ?X($Bottom, $Top), H -> ?X($Bottom, $Top)]>, LIntermediate1)
 """),
         ('example11.txt', """
 Subs:
-S -> ?(LTemplate<H[G = H]>, LIntermediate1)
+S -> ?(LTemplate<H[G -> ?X(), H -> ?X()]>, LIntermediate1)
 """),
         ('example12.txt', """
 Subs:
 S(LLeftBranch2, LIntermediate2) -> ?(LLeftBranch2, LTemplate<int>)
 G($Bottom, $Top) -> int
 F($Bottom, $Top) -> int
-U(LTemplate<int>, LIntermediate2) -> ?(LTemplate<int>, LTemplate<int>)
+U(LTemplate<F()>, LIntermediate2) -> ?(LTemplate<int>, LTemplate<int>)
 """)
     ])
     def test_unify(self, fname, expected):

@@ -68,6 +68,9 @@ class Type(TypeVal):
     def __eq__(self, other):
         return self.name == other.name
 
+    def __hash__(self):
+        return hash(self.name)
+
 
 class GenType(TypeVal):
 
@@ -87,6 +90,12 @@ class GenType(TypeVal):
     def __eq__(self, other):
         return self.name == other.name and self.params == other.params
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        return hash(self.name) | sum(map(hash, self.params))
+
 
 class ConstrainedType(TypeVal):
 
@@ -98,12 +107,14 @@ class ConstrainedType(TypeVal):
             self.constraints = [subs]
 
         for c in self.constraints:
-            if isinstance(c.left, ConstrainedType):
+            if c == 'fail':
+                continue
+            if isinstance(c.of, ConstrainedType):
                 self.constraints.extend(c.left.constraints)
-                c.left = c.left.type
-            if isinstance(c.right, ConstrainedType):
+                c.left = c.of.type
+            if isinstance(c.to, ConstrainedType):
                 self.constraints.extend(c.right.constraints)
-                c.right = c.right.type
+                c.right = c.to.type
 
         if isinstance(any_type, ConstrainedType):
             self.type = any_type.type
@@ -113,7 +124,7 @@ class ConstrainedType(TypeVal):
             self.name = any_type.name
             self.type = any_type
 
-        self.constraints = list(set(filter(lambda x: isinstance(x, Eq) and x.left != x.right, self.constraints)))
+        self.constraints = list(set(self.constraints))
 
     def __repr__(self):
         return self.__str__()
@@ -122,7 +133,8 @@ class ConstrainedType(TypeVal):
         return "{0}{1}".format(self.type, self.constraints)
 
     def substitute(self, substitutions):
-        res = ConstrainedType(substitute(substitutions, self.type), substitute(substitutions, self.constraints))
+        res = ConstrainedType(substitute(substitutions, self.type),
+                              substitute(substitutions, list(set(self.constraints).difference(substitutions.values()))))
         if not res.constraints:
             res = res.type
         return res
@@ -132,6 +144,9 @@ class ConstrainedType(TypeVal):
             return False
 
         return self.type == other.type and Counter(self.constraints) == Counter(other.constraints)
+
+    def __hash__(self):
+        return hash(self.type) | sum(map(hash, self.constraints))
 
 
 variable_matches = None
@@ -172,6 +187,9 @@ class Variable:
 
     def __le__(self, other):
         return str(self) < str(other)
+
+    def __hash__(self):
+        return hash(self.lower) | hash(self.upper)
 
     def __eq__(self, other):
         is_bounds_equal = other is not None and isinstance(other, Variable) and\
@@ -275,7 +293,13 @@ class Substitution:
         self.of = of
 
     def substitute(self, substitutions):
-        return Substitution(substitute(substitutions, self.of), substitute(substitutions, self.to))
+        return Substitution(self.of, substitute(substitutions, self.to))
+
+    def __hash__(self):
+        return hash(self.of) | hash(self.to)
+
+    def __le__(self, other):
+        return str(self) < str(other)
 
     def __repr__(self):
         return self.__str__()
@@ -317,22 +341,15 @@ def index(s, sub):
         return float('inf')
 
 
-def split_params(s):
-    """
-    Split string on parameters split by commas with attention to brackets
-    :param s: string to split
-    :return: list of parameters
-    """
-    splits = []
-    last = 0
+def find_in_first_level(s, c):
+    locations = []
     closed = [0, 0, 0]
-    for m in re.finditer('[\[\],<>()]', s):
-        if m[0] == ',' and closed == [0, 0, 0]:
-            splits.append(s[last: m.start(0)])
-            last = m.end(0)
+    for m in re.finditer('[\[\]<>()' + c + ']', s):
+        if m[0] == c and closed == [0, 0, 0]:
+            locations.append(m.start(0))
         elif m[0] == '<':
             closed[0] -= 1
-        elif m[0] == '>':
+        elif m[0] == '>' and s[m.start(0) - 1] != '-':
             closed[0] += 1
         elif m[0] == '(':
             closed[1] -= 1
@@ -342,8 +359,25 @@ def split_params(s):
             closed[2] -= 1
         elif m[0] == ']':
             closed[2] += 1
-    splits.append(s[last:])
-    return splits
+    return locations
+
+
+def split_params(s):
+    """
+    Split string on parameters split by commas with attention to brackets
+    :param s: string to split
+    :return: list of parameters
+    """
+    commas = find_in_first_level(s, ',')
+
+    last = 0
+    res = []
+    for v in commas:
+        res.append(s[last: v])
+        last = v + 1
+    res.append(s[last:])
+
+    return res
 
 
 def parsetype(s, variables=None):
@@ -356,21 +390,24 @@ def parsetype(s, variables=None):
     if variables is None:
         variables = ctx.variables
     s = str.strip(s)
+    check_ops = [
+        find_in_first_level(s, '='),
+        find_in_first_level(s, ':'),
+        find_in_first_level(s, '-')
+    ]
     if s == "BOTTOM":
         return BOTTOM
     elif s == "TOP":
         return TOP
-    elif '->' in s:
-        of, to = list(map(lambda x: parsetype(x.strip(), variables), s.split('->')))
-        return Substitution(of, to)
-    elif ':' in s:
-        t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), s.split(':')))
+    elif check_ops[0]:  # =
+        t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), [s[:check_ops[0][0]], s[check_ops[0][0] + 1:]]))
+        return Eq(t1, t2)
+    elif check_ops[1]:  # :
+        t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), [s[:check_ops[1][0]], s[check_ops[1][0] + 1:]]))
         return Sub(t1, t2)
-        """
-        elif '=' in s:
-            t1, t2 = list(map(lambda x: parsetype(x.strip(), variables), s.split('=')))
-            return Eq(t1, t2)
-        """
+    elif check_ops[2]:  # ->
+        of, to = list(map(lambda x: parsetype(x.strip(), variables), [s[:check_ops[2][0]], s[check_ops[2][0] + 2:]]))
+        return Substitution(of, to)
     else:
 
         if s.endswith(']'):
@@ -407,8 +444,8 @@ def parsetype(s, variables=None):
 def parse_constraints(s, variables=None):
     params = []
     for param in split_params(s):
-        lv, _, rv = list(map(lambda x: x.strip(), param.partition('=')))
-        params.append(Eq(parsetype(lv, variables), parsetype(rv, variables)))
+        lv, _, rv = list(map(lambda x: x.strip(), param.partition('->')))
+        params.append(Substitution(parsetype(lv, variables), parsetype(rv, variables)))
     return params
 
 

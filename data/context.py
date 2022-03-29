@@ -23,6 +23,7 @@ def out_helper(pair, outp):
         _outs[outp] = pair[1]
     elif isinstance(outp, list):
         if pair[1] is not None:
+            outp.clear()
             outp.extend(pair[1])
     return pair[0]
 
